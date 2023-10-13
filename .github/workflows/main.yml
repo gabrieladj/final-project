@@ -28,7 +28,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm install
-  #  - run: npx prisma migrate deploy
-  #  - run: npx jest --all --ci
+#  - run: npx prisma migrate deploy
+#  - run: npx jest --all --ci
     - run: npm run build
-   - run: sudo systemctl restart final-project
+    - run: sudo systemctl restart final-project
