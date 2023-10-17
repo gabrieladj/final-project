@@ -11,15 +11,12 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  test:
     runs-on: self-hosted
 
     strategy:
       matrix:
         node-version: [18.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
@@ -28,7 +25,24 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm install
-    - run: npx prisma migrate deploy
     - run: npx jest --all --ci
-    - run: npm run build
-    - run: sudo systemctl restart final-project
+
+  build:
+    runs-on: self-hosted
+    needs: test
+    strategy:
+      matrix:
+        node-version: [18.x]
+    if: success() && github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npx prisma migrate deploy
+      - run: rm -rf ~/humanitarianism-game && mkdir ~/humanitarianism-game
+      - run: cp -r * ~/humanitarianism-game/ && cd ~/humanitarianism-game/
+      - run: npm run build
+      - run: sudo systemctl restart final-project
