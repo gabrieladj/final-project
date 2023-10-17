@@ -1,6 +1,8 @@
-import Head from 'next/head'
 export default function Home() {
   return (
-    <h1>Hello world</h1>
+    <div>
+      <h2>Humanitarianism Project</h2>
+      <img src='Picture1.png' alt='image' />
+    </div>
   )
 }
