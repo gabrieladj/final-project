@@ -41,8 +41,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npx prisma migrate deploy
       - run: rm -rf ~/humanitarianism-game && mkdir ~/humanitarianism-game
       - run: cp -r * ~/humanitarianism-game/ && cd ~/humanitarianism-game/
+      - run: npm install
+      - run: npx prisma migrate deploy
       - run: npm run build
       - run: sudo systemctl restart final-project
