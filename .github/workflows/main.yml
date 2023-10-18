@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x]
-    if: success() && github.ref == 'refs/heads/master'
+    if: success() && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
