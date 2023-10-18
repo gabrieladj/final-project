@@ -1,14 +1,13 @@
+'use client'
+
+import React from "react";
+import "./styles.css";
+import MapChart from "./MapChart";
+
 export default function Home() {
   return (
     <div>
-      <h2>Humanitarianism Project</h2>
-      <Map />
+      <MapChart />
     </div>
   )
 }
-
-export function Map() {
-  return (
-    <img src="/Picture1.png" alt="Map"></img>
-  );
-};

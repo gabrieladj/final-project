@@ -15,7 +15,9 @@
     "next": "13.5.4",
     "react": "^18",
     "react-dom": "^18",
-    "sqlite3": "^5.1.6"
+    "react-simple-maps": "^3.0.0",
+    "sqlite3": "^5.1.6",
+    "tailwindcss-tables": "^0.4.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.4",
