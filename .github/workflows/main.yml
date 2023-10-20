@@ -44,7 +44,7 @@ jobs:
       - run: rm -rf ~/humanitarianism-game && mkdir ~/humanitarianism-game
       - run: cp -r * ~/humanitarianism-game/
       - name: Build and run
-        working-directory: ~/humanitarianism-game/
+        working-directory: /home/final-project/humanitarianism-game/
         run: |
           npm install
           npx prisma migrate deploy
