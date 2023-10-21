@@ -28,8 +28,27 @@ body {
     rgb(var(--background-start-rgb));
 }
 
+/*
 #mainCanvas
 {
     display: block;
     margin: 0 auto;
+}
+*/
+
+.CanvasBackground {
+  background: url("/map.png") center center/contain no-repeat;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; /* Place the background behind the canvas */
+}
+
+.centered-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
