@@ -12,5 +12,23 @@ datasource db {
 
 model User {
   id    Int    @id @default(autoincrement())
+  username String @unique
+  password String
   email String @unique
+  roll String //this is to distinguish students from professor
+}
+
+model refGenPoints {
+  currentRefugeesThisTurn Int @id @default(autoincrement())
+  oldRefugees Int 
+  uncontrollableRefugees Int
+}
+
+model refugeeCamps {
+  foodLevel Int @id @default(autoincrement())
+  healthLevel Int
+  housingLevel Int
+  adminLevel Int
+  refugeesPresent Int
+  refugeeCapacity Int
 }
