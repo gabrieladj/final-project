@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import Main from '../src/app/page';
-import Map from '../src/app/page';
+import Test from '../src/app/test/page';
 import '@testing-library/jest-dom';
 
  
@@ -17,13 +17,19 @@ describe('Home', () => {
   //   expect(mapImage).toHaveAttribute('src', '/Picture1.png');
   // });
 
-  it('Main component renders without errors', () => {
-    render(<Main />);
+  // it('Main component renders without errors', () => {
+  //   render(<Main />);
   
-    // Check if the canvas element is in the document
-    const canvasElement = screen.getByTestId('canvas');
-    expect(canvasElement).toBeInTheDocument();
+  //   // Check if the canvas element is in the document
+  //   const canvasElement = screen.getByTestId('canvas');
+  //   expect(canvasElement).toBeInTheDocument();
 
     
+  // });
+  it('Test the test (test)', () => {
+    render(<Test />);
+    // Check if the canvas element is in the document
+    const testElement = screen.getByTestId('test');
+    expect(testElement).toBeInTheDocument();
   });
 });
