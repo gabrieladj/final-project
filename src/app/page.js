@@ -14,6 +14,7 @@ async function fetcher(url) {
 export default function Main(props) {
   const canvasRef = useRef(null);
   const defaultSize = 720;
+  const drawNumbers = true;
 
   const { data, error } = useSWR('/map-nodes.json', fetcher)
 
@@ -39,21 +40,30 @@ export default function Main(props) {
     ctx.strokeStyle = '#e8bd20';
     ctx.beginPath();
     Object.keys(data['paths']).map((path, i) => {
-      const curr = data['paths'][path];
-      console.log(curr);
-      ctx.moveTo(curr.x1, curr.y1);
-      ctx.lineTo(curr.x2, curr.y2);
+      const node = data['paths'][path];
+      console.log(node);
+      ctx.beginPath();
+      ctx.moveTo(node.x1, node.y1);
+      ctx.lineTo(node.x2, node.y2);
+      ctx.stroke(); // Render the path
+      if (drawNumbers) {
+        ctx.fillStyle = 'black';
+        ctx.fillText((i+1), (node.x1+node.x2)/2, (node.y1+node.y2)/2);
+      }
     });
-    ctx.stroke(); // Render the path
+    //ctx.stroke(); // Render the path
 
     // Drawing camps (blue squares)
     const campSize = 25; // size of blue square
+    ctx.fillStyle = '#0000CC';
     Object.keys(data['camps']).map((camp, i) => {
-      const curr = data['camps'][camp];
-      ctx.fillStyle = '#0000CC';
-      ctx.fillRect(curr.x - campSize / 2, curr.y - campSize / 2, campSize, campSize);
-      ctx.fillStyle = 'white';
-      ctx.fillText((i+1), curr.x-3, curr.y+4);
+      const node = data['camps'][camp];
+      ctx.fillRect(node.x - campSize / 2, node.y - campSize / 2, campSize, campSize);
+      if (drawNumbers) {
+        ctx.fillStyle = 'white';
+        ctx.fillText((i+1), node.x-3, node.y+4);
+        ctx.fillStyle = '#0000CC';
+      }
     });
 
     
@@ -61,12 +71,20 @@ export default function Main(props) {
     // Drawing generation points (red circles)
     const circleColor = '#FF0000';
     const circleRadius = 9;
-    Object.keys(data['generation_points']).map(gen_point => {
-      const curr = data['generation_points'][gen_point];
+    Object.keys(data['generation_points']).map((gen_point, i) => {
+      const node = data['generation_points'][gen_point];
       ctx.beginPath();
-      ctx.arc(curr.x, curr.y, circleRadius, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, circleRadius, 0, 2 * Math.PI);
       ctx.fillStyle = circleColor;
       ctx.fill();
+      ctx.fillStyle = 'white';
+      ctx.fillText(node.letter, node.x-4, node.y+4);
+      ctx.fillStyle = circleColor;
+      if (drawNumbers) {
+        ctx.fillStyle = 'Black';
+        ctx.fillText((i+1), node.x+15, node.y+15);
+        ctx.fillStyle = circleColor;
+      }
     });
 
   }
@@ -95,6 +113,13 @@ export default function Main(props) {
       ctx.scale(size / defaultSize, size / defaultSize);
       draw(ctx);
     }
+
+    // Add event listener for `click` events.
+    canvas.addEventListener('click', function(event) {
+      var x = event.pageX,
+          y = event.pageY;
+      alert ("clicked at {x:" + x + ", y:" + y + "}")
+    }, false);
 
     resizeCanvas();
   }, [draw]);
