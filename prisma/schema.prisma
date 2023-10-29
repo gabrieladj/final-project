@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// primary keys: anything with @id
+// foreign keys: refugeeRegionId, refugeeNodeId, & refugeeCampId
 
 generator client {
   provider = "prisma-client-js"
@@ -11,24 +11,63 @@ datasource db {
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   username String @unique
   password String
-  email String @unique
-  roll String //this is to distinguish students from professor
+  email    String @unique
+  roll     String //this is to distinguish students from professor
 }
 
-model refGenPoints {
-  currentRefugeesThisTurn Int @id @default(autoincrement())
-  oldRefugees Int 
+//one to many: each refugee region can have multiple RefugeeNodes
+//creates relationship btwn RefugeeRegion & RefugeeNode models
+model RefugeeRegion { //produces refugees
+  id                   Int           @id @default(autoincrement())
+  name                 String
+  orderlyGeneration    Int
+  disorderlyGeneration Int
+  panicGeneration      Int
+  refugeeNodes         RefugeeNode[]
+}
+
+//each RefugeeNode can have multiple RefugeeGeneration instances
+model RefugeeNode { //red dots (gen points)
+  id                     Int                 @id @default(autoincrement())
+  name                   String
+  refugeeRegionId        Int
+  refugeeGenerations     RefugeeGeneration[]
+  foodLevel              Int
+  healthcareLevel        Int
+  administrationLevel    Int
+  newRefugees            Int
+  totalRefugees          Int
   uncontrollableRefugees Int
+  RefugeeRegion          RefugeeRegion       @relation(fields: [refugeeRegionId], references: [id])
 }
 
-model refugeeCamps {
-  foodLevel Int @id @default(autoincrement())
-  healthLevel Int
-  housingLevel Int
-  adminLevel Int
-  refugeesPresent Int
-  refugeeCapacity Int
+//allows access to the RefugeeNode associated w specific RefugeeGeneration
+//one-to-one: RefugeeGeneration & RefugeeCamp
+model RefugeeGeneration { //golden lines
+  id             Int          @id @default(autoincrement())
+  refugeeNodeId  Int
+  generationType String
+  capacity       Int
+  turnsRemaining Int
+  connectToCamp  RefugeeCamp? @relation(fields: [refugeeCampId], references: [id]) //"?" -> relationship is optional
+  RefugeeNode    RefugeeNode  @relation(fields: [refugeeNodeId], references: [id])
+  refugeeCampId  Int?
+}
+
+//one-to-many: each camp can have multiple generation instances
+model RefugeeCamp { //blue boxes (camps)
+  id                   Int                 @id @default(autoincrement())
+  name                 String
+  foodLevel            Int
+  healthcareLevel      Int
+  housingLevel         Int
+  administrationLevel  Int
+  inDanger             Boolean
+  inCrisis             Boolean
+  totalRefugeesPresent Int
+  refugeeCapacity      Int
+  connectingLines      RefugeeGeneration[]
 }
