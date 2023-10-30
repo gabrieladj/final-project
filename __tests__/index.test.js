@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import Main from '../src/app/pages/index';
+//import Main from '../src/pages/index';
 import Test from '../src/app/test/page';
 import '@testing-library/jest-dom';
 
