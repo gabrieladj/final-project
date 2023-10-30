@@ -55,9 +55,6 @@ export default function Main(props) {
     ctx.font = "12px serif";
     ctx.fillStyle = 'black';
 
-    position.x = position.x + 25;
-    position.y = position.y - 10;
-
     if (images != null ) {
         ctx.drawImage(images.food, position.x, position.y-32, imgSize, imgSize);
         ctx.drawImage(images.house, position.x, position.y+imgSize-32, imgSize, imgSize);
@@ -140,6 +137,8 @@ export default function Main(props) {
     Object.keys(data['camps']).map((camp, i) => {
       ctx.fillStyle = '#0000CC';
       const node = data['camps'][camp];
+      const statsOffset = node['statsOffset'];
+      const statsPostion = {"x": node.x + statsOffset.x, "y": node.y + statsOffset.y};
       ctx.fillRect(node.x - campSize / 2, node.y - campSize / 2, campSize, campSize);
       if (drawCampNum) {
         ctx.fillStyle = 'white';
@@ -147,7 +146,8 @@ export default function Main(props) {
         ctx.fillStyle = '#0000CC';
       }
       var stats = get_camp_stats();
-      drawStats(ctx, {x: node.x, y: node.y }, stats);
+
+      drawStats(ctx, statsPostion, stats);
     });
 
     // Drawing generation points (red circles)
