@@ -37,8 +37,14 @@ export default function Main(props) {
   var drawCampNum = true,
       drawGenNum = false,
       drawPathNum = false;
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false)
   var images = null;
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
+
+  // Function to toggle the panel's open/close state
+  const togglePanel = () => {
+    setIsPanelOpen(!isPanelOpen);
+  };
 
   const { data, error } = useSWR('/map-nodes.json', fetcher)
 
@@ -51,20 +57,35 @@ export default function Main(props) {
   function drawStats(ctx, position, stats) {
     const ySpacing = 21;
     const imgSize = 20;
-    
-    ctx.font = "12px serif";
-    ctx.fillStyle = 'black';
+    const margin   = {'x': 4,
+                      'y': 4};
+    const imagePos = {'x': position.x+margin.x,
+                      'y': position.y+margin.y};
+    const textPos  = {'x': position.x + margin.x + imgSize + 5,
+                      'y': position.y + margin.y + (imgSize/2) + 5};
 
+    ctx.font = "12px serif";
+
+    ctx.fillStyle = "#E7E0CA";
+    ctx.fillRect(position.x, position.y, imgSize+35, (imgSize*4)+margin.y*2);
+    
     if (images != null ) {
-        ctx.drawImage(images.food, position.x, position.y-32, imgSize, imgSize);
-        ctx.drawImage(images.house, position.x, position.y+imgSize-32, imgSize, imgSize);
-        ctx.drawImage(images.health, position.x, position.y+imgSize*2-32, imgSize, imgSize);
-        ctx.drawImage(images.admin, position.x, position.y+imgSize*3-32, imgSize, imgSize);
+        ctx.drawImage(images.food, imagePos.x, imagePos.y, imgSize, imgSize);
+        imagePos.y += imgSize;
+        ctx.drawImage(images.house, imagePos.x, imagePos.y, imgSize, imgSize);
+        imagePos.y += imgSize;
+        ctx.drawImage(images.health, imagePos.x, imagePos.y, imgSize, imgSize);
+        imagePos.y += imgSize;
+        ctx.drawImage(images.admin, imagePos.x, imagePos.y, imgSize, imgSize);
     }
-    ctx.fillText(stats.foodLevel, position.x+imgSize+5, position.y-20);
-    ctx.fillText(stats.housingLevel, position.x+imgSize+5, position.y+ySpacing-20);
-    ctx.fillText(stats.healthcareLevel, position.x+imgSize+5, position.y+ySpacing*2-20);
-    ctx.fillText(stats.administrationLevel, position.x+imgSize+5, position.y+ySpacing*3-20);
+    ctx.fillStyle = 'black';
+    ctx.fillText(stats.foodLevel, textPos.x, textPos.y);
+    textPos.y += imgSize;
+    ctx.fillText(stats.housingLevel, textPos.x, textPos.y);
+    textPos.y += imgSize;
+    ctx.fillText(stats.healthcareLevel, textPos.x, textPos.y);
+    textPos.y += imgSize;
+    ctx.fillText(stats.administrationLevel, textPos.x, textPos.y);
   }
 
   function draw(ctx) {
@@ -221,6 +242,13 @@ export default function Main(props) {
         {/* Add a background image as a CSS background */}
         <div className="CanvasBackground" />
         <canvas data-testid="canvas" ref={canvasRef} width={defaultSize} height={defaultSize} />
+      </div>
+      {/* Side Panel */}
+      <div className={`side-panel ${isPanelOpen ? 'open' : ''}`}>
+        {/* Panel content goes here */}
+        <label for="fname">Housing:</label>
+        <input type="text" id="fname" name="fname"></input>
+        <button onClick={togglePanel}>Toggle Panel</button>
       </div>
     </div>
   );
