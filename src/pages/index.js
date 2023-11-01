@@ -5,6 +5,10 @@ import Head from 'next/head';
 import useSWR from 'swr'
 import get_camp_stats from '../lib/stats'
 import { getNameOfJSDocTypedef } from 'typescript';
+import io from "socket.io-client"
+
+const socket = io.connect("http://localhost:3001")
+
 
 async function fetcher(url) {
   const res = await fetch(url);
@@ -32,6 +36,11 @@ function loadImages(sources, callback) {
 }
 
 export default function Main(props) {
+
+  const [message,setMessage] = useState('')
+  const [messageRecieve,setMessageRecieve]= useState("")
+
+
   const canvasRef = useRef(null);
   const defaultSize = 720;
   var drawCampNum = true,
@@ -195,6 +204,13 @@ export default function Main(props) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
+    socket.on('recieve_message',(data) => {
+      setMessageRecieve(data.message)
+      alert(data.message)
+      console.log("message was send")
+
+    })
+
     window.addEventListener('resize', resizeCanvas, false);
     function resizeCanvas() {
       const pixelRatio = 1; // window.devicePixelRatio || 1;
@@ -234,7 +250,17 @@ export default function Main(props) {
     });
 
     resizeCanvas();
-  }, [draw]);
+  }, [draw],[socket]);
+
+  const sendMessage = () =>{
+    socket.emit("send_message" , {
+      message : "Hello"
+    })
+    console.log('sending a messages')
+
+  }
+ 
+  
 
   return (
     <div className="centered-container">
@@ -249,7 +275,20 @@ export default function Main(props) {
         <label for="fname">Housing:</label>
         <input type="text" id="fname" name="fname"></input>
         <button onClick={togglePanel}>Toggle Panel</button>
+        <div>
+          <input 
+            placeholder='message..'
+            onChange={(event) => {
+              setMessage(event.target.value)
+            }}
+          />
+          <button onClick={sendMessage}>Send Message</button>
+          <h1>{messageRecieve}</h1>
+
+        </div>
+       
       </div>
+      
     </div>
   );
 }
