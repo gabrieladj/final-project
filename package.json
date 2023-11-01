@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "nodemon start",
     "lint": "next lint",
     "test": "jest --watch"
   },
@@ -17,6 +17,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-simple-maps": "^3.0.0",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
     "sqlite3": "^5.1.6",
     "swr": "^2.2.4",
     "tailwindcss-tables": "^0.4.0"

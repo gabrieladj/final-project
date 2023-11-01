@@ -5,6 +5,9 @@ import Head from 'next/head';
 import useSWR from 'swr'
 import get_camp_stats from '../lib/stats'
 import { getNameOfJSDocTypedef } from 'typescript';
+import io from 'socket.io-client'
+
+const socket = io('http://localhost:3000')
 
 async function fetcher(url) {
   const res = await fetch(url);
@@ -32,6 +35,10 @@ function loadImages(sources, callback) {
 }
 
 export default function Main(props) {
+  const [message,setMessage] = useState('')
+  const [messages,setMessages] = useState([])
+
+
   const canvasRef = useRef(null);
   const defaultSize = 720;
   var drawCampNum = true,
@@ -172,6 +179,10 @@ export default function Main(props) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
+    socket.on('chat message', (message) => {
+      setMessages([...messages, message]);
+    });
+
     window.addEventListener('resize', resizeCanvas, false);
     function resizeCanvas() {
       const pixelRatio = 1; // window.devicePixelRatio || 1;
@@ -211,7 +222,12 @@ export default function Main(props) {
     });
 
     resizeCanvas();
-  }, [draw]);
+  }, [draw],[messages]);
+
+  const handleSendMessage = () => {
+    socket.emit('chat message', message);
+    setMessage('');
+  };
 
   return (
     <div className="centered-container">
@@ -220,6 +236,7 @@ export default function Main(props) {
         <div className="CanvasBackground" />
         <canvas data-testid="canvas" ref={canvasRef} width={defaultSize} height={defaultSize} />
       </div>
+      
     </div>
   );
 }
