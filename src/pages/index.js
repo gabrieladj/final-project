@@ -4,11 +4,8 @@ import styles from './globals.css';
 import Head from 'next/head';
 import useSWR from 'swr'
 import get_camp_stats from '../lib/stats'
-import { getNameOfJSDocTypedef } from 'typescript';
 import io from "socket.io-client"
-
-const socket = io.connect("http://localhost:3001")
-
+let socket;
 
 async function fetcher(url) {
   const res = await fetch(url);
@@ -46,15 +43,19 @@ export default function Main(props) {
   var drawCampNum = true,
       drawGenNum = false,
       drawPathNum = false;
+  const genRadius = 9;
+  const campSize = 25; // size of blue square
   const [imgLoaded, setImgLoaded] = useState(false)
   var images = null;
   const [isPanelOpen, setIsPanelOpen] = useState(true);
+
 
   // Function to toggle the panel's open/close state
   const togglePanel = () => {
     setIsPanelOpen(!isPanelOpen);
   };
 
+  const dataRef = useRef(null)
   const { data, error } = useSWR('/map-nodes.json', fetcher)
 
   if (error) { 
@@ -151,7 +152,6 @@ export default function Main(props) {
       }
       else // no control points, straight line from a to b
       {
-        console.log("bezier line");
         ctx.lineTo(endCoord.x, endCoord.y);
         ctx.stroke(); // Render the path
       }
@@ -163,7 +163,6 @@ export default function Main(props) {
     });
 
     // Drawing camps (blue squares)
-    const campSize = 25; // size of blue square
     Object.keys(data['camps']).map((camp, i) => {
       ctx.fillStyle = '#0000CC';
       const node = data['camps'][camp];
@@ -182,11 +181,10 @@ export default function Main(props) {
 
     // Drawing generation points (red circles)
     const circleColor = '#FF0000';
-    const circleRadius = 9;
     Object.keys(data['generation_points']).map((gen_point, i) => {
       const node = data['generation_points'][gen_point];
       ctx.beginPath();
-      ctx.arc(node.x, node.y, circleRadius, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, genRadius, 0, 2 * Math.PI);
       ctx.fillStyle = circleColor;
       ctx.fill();
       ctx.fillStyle = 'white';
@@ -200,16 +198,39 @@ export default function Main(props) {
     });
   }
 
+  function handleInput(clickLoc, data, scale) {
+    
+  }
+
+  const socketInitializer = async () => {
+    await fetch('/api/server');
+    socket = io()
+
+    socket.on('connect', () => {
+      console.log('connected')
+    })
+
+    socket.on('receive_message',(data) => {
+      setMessageRecieve(data.message)
+      alert(data.message)
+      console.log("message was sent")
+    })
+  }
+
   useEffect(() => {
+    // start socket
+    socketInitializer();
+
+    if (data) {
+      // Store the data object in the ref
+      dataRef.current = data;
+    }
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    socket.on('recieve_message',(data) => {
-      setMessageRecieve(data.message)
-      alert(data.message)
-      console.log("message was send")
-
-    })
+    
+    
 
     window.addEventListener('resize', resizeCanvas, false);
     function resizeCanvas() {
@@ -235,6 +256,29 @@ export default function Main(props) {
     //   alert ("clicked at {x:" + x + ", y:" + y + "}")
     // }, false);
 
+    // Add event listener for `click` events.
+    canvas.addEventListener('click', function(event) {
+
+      // get click position relative to scale of canvas
+      const scale = defaultSize / canvas.height;
+      const canvasX = Math.floor(event.offsetX * scale);
+      const canvasY = Math.floor(event.offsetY * scale);
+      var clickLoc = {'x': canvasX, 'y': canvasY};
+      const data = dataRef.current;
+      //handleInput(clickLoc, data, scale)
+      if (!data) return;
+      const campClickTarget = campSize * scale / 2;
+      console.log(JSON.stringify(clickLoc));
+      Object.keys(data['camps']).map((camp, i) => {
+        var node = data['camps'][camp];
+        
+        if (clickLoc.x < node.x + campClickTarget && clickLoc.x > node.x - campClickTarget
+            && clickLoc.y < node.y + campClickTarget && clickLoc.y > node.y - campClickTarget) {
+          console.log ("clicked on camp " + (i+1));
+        }
+      });
+    }, false);
+
     // list of all the images we need to load
     var sources = {
       food: '/food.png',
@@ -250,11 +294,12 @@ export default function Main(props) {
     });
 
     resizeCanvas();
-  }, [draw],[socket]);
+
+  }, [data]);
 
   const sendMessage = () =>{
     socket.emit("send_message" , {
-      message : "Hello"
+      message : message
     })
     console.log('sending a messages')
 
@@ -272,7 +317,7 @@ export default function Main(props) {
       {/* Side Panel */}
       <div className={`side-panel ${isPanelOpen ? 'open' : ''}`}>
         {/* Panel content goes here */}
-        <label for="fname">Housing:</label>
+        <label htmlFor="fname">Housing:</label>
         <input type="text" id="fname" name="fname"></input>
         <button onClick={togglePanel}>Toggle Panel</button>
         <div>
