@@ -45,8 +45,8 @@ export default function Main(props) {
       drawPathNum = false;
   const genRadius = 9;
   const campSize = 25; // size of blue square
-  const [imgLoaded, setImgLoaded] = useState(false)
-  var images = null;
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const imagesRef = useRef(null);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
 
@@ -60,7 +60,6 @@ export default function Main(props) {
 
   if (error) { 
     console.log("error loading json");
-    return;
   }
   if (!data) console.log('loading map data...');
 
@@ -79,14 +78,14 @@ export default function Main(props) {
     ctx.fillStyle = "#E7E0CA";
     ctx.fillRect(position.x, position.y, imgSize+35, (imgSize*4)+margin.y*2);
     
-    if (images != null ) {
-        ctx.drawImage(images.food, imagePos.x, imagePos.y, imgSize, imgSize);
+    if (imagesRef.current != null ) {
+        ctx.drawImage(imagesRef.current.food, imagePos.x, imagePos.y, imgSize, imgSize);
         imagePos.y += imgSize;
-        ctx.drawImage(images.house, imagePos.x, imagePos.y, imgSize, imgSize);
+        ctx.drawImage(imagesRef.current.house, imagePos.x, imagePos.y, imgSize, imgSize);
         imagePos.y += imgSize;
-        ctx.drawImage(images.health, imagePos.x, imagePos.y, imgSize, imgSize);
+        ctx.drawImage(imagesRef.current.health, imagePos.x, imagePos.y, imgSize, imgSize);
         imagePos.y += imgSize;
-        ctx.drawImage(images.admin, imagePos.x, imagePos.y, imgSize, imgSize);
+        ctx.drawImage(imagesRef.current.admin, imagePos.x, imagePos.y, imgSize, imgSize);
     }
     ctx.fillStyle = 'black';
     ctx.fillText(stats.foodLevel, textPos.x, textPos.y);
@@ -202,33 +201,11 @@ export default function Main(props) {
     
   }
 
-  const socketInitializer = async () => {
-    await fetch('/api/server');
-    socket = io()
-
-    socket.on('connect', () => {
-      console.log('connected')
-    })
-
-    socket.on('receive_message',(data) => {
-      setMessageRecieve(data.message)
-      alert(data.message)
-      console.log("message was sent")
-    })
-  }
-
+  // initial useEffect function, will be called on page load
   useEffect(() => {
-    // start socket
-    socketInitializer();
-
-    if (data) {
-      // Store the data object in the ref
-      dataRef.current = data;
-    }
-
+    console.log("use effect called");
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-
     
     
 
@@ -249,36 +226,6 @@ export default function Main(props) {
       draw(ctx);
     }
 
-    // // Add event listener for `click` events.
-    // canvas.addEventListener('click', function(event) {
-    //   var x = event.pageX,
-    //       y = event.pageY;
-    //   alert ("clicked at {x:" + x + ", y:" + y + "}")
-    // }, false);
-
-    // Add event listener for `click` events.
-    canvas.addEventListener('click', function(event) {
-
-      // get click position relative to scale of canvas
-      const scale = defaultSize / canvas.height;
-      const canvasX = Math.floor(event.offsetX * scale);
-      const canvasY = Math.floor(event.offsetY * scale);
-      var clickLoc = {'x': canvasX, 'y': canvasY};
-      const data = dataRef.current;
-      //handleInput(clickLoc, data, scale)
-      if (!data) return;
-      const campClickTarget = campSize * scale / 2;
-      console.log(JSON.stringify(clickLoc));
-      Object.keys(data['camps']).map((camp, i) => {
-        var node = data['camps'][camp];
-        
-        if (clickLoc.x < node.x + campClickTarget && clickLoc.x > node.x - campClickTarget
-            && clickLoc.y < node.y + campClickTarget && clickLoc.y > node.y - campClickTarget) {
-          console.log ("clicked on camp " + (i+1));
-        }
-      });
-    }, false);
-
     // list of all the images we need to load
     var sources = {
       food: '/food.png',
@@ -288,24 +235,77 @@ export default function Main(props) {
     };
 
     loadImages(sources, function(loadedImages) {
-      images = loadedImages;
+      imagesRef.current = loadedImages;
       setImgLoaded(true);
       draw(ctx);
     });
 
     resizeCanvas();
+  });
 
-  }, [data]);
+  // effect for initializing socket. empty dependancy array to make it run only once
+  useEffect(() => {
+    const socketInitializer = async () => {
+      await fetch('/api/server');
+      socket = io()
+  
+      socket.on('connect', () => {
+        console.log('connected')
+      })
+  
+      socket.on('receive_message',(data) => {
+        setMessageRecieve(data.message)
+        alert(data.message)
+        console.log("message was sent")
+      })
+    }
+
+    socketInitializer();
+    return () => {
+      // Add a cleanup function to close the socket connection when the component unmounts
+      socket.disconnect();
+    };
+  }, []);
+
+  // Separate effect for drawing based on changes in 'data'
+  useEffect(() => {
+    if (data) {
+      // Store the data object in the ref
+      dataRef.current = data;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      // Add event listener for `click` events.
+      canvas.addEventListener('click', function(event) {
+
+        // get click position relative to scale of canvas
+        const scale = defaultSize / canvas.height;
+        const canvasX = Math.floor(event.offsetX * scale);
+        const canvasY = Math.floor(event.offsetY * scale);
+        var clickLoc = {'x': canvasX, 'y': canvasY};
+        const data = dataRef.current;
+        //handleInput(clickLoc, data, scale)
+        if (!data) return;
+        const campClickTarget = campSize * scale / 2;
+        console.log(JSON.stringify(clickLoc));
+        Object.keys(data['camps']).map((camp, i) => {
+          var node = data['camps'][camp];
+          
+          if (clickLoc.x < node.x + campClickTarget && clickLoc.x > node.x - campClickTarget
+              && clickLoc.y < node.y + campClickTarget && clickLoc.y > node.y - campClickTarget) {
+            console.log ("clicked on camp " + (i+1));
+          }
+        });
+      }, false);
+      draw(ctx);
+    }
+  }, [data] );
 
   const sendMessage = () =>{
     socket.emit("send_message" , {
       message : message
-    })
-    console.log('sending a messages')
-
+    });
+    console.log('sending a message');
   }
- 
-  
 
   return (
     <div className="centered-container">
