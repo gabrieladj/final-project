@@ -1,7 +1,7 @@
 import { prisma } from "../server/db/client";
 
 export default function get_camp_stats() {
-    let stats = {foodLevel: 10,
+    let stats = {foodLevel: 100,
                  healthcareLevel: 5,
                  housingLevel: 5,
                  administrationLevel: 3};

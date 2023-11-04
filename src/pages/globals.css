@@ -52,3 +52,19 @@ body {
   align-items: center;
   min-height: 100vh;
 }
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: -300px; /* Adjust the width as needed */
+  height: 100%;
+  width: 300px; /* Adjust the width as needed */
+  background-color: red;
+  color: black;
+  box-shadow: -5px 0 5px rgba(0, 0, 0, 0.2);
+  transition: right 0.3s ease-in-out;
+}
+
+.side-panel.open {
+  right: 0;
+}

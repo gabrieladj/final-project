@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import Main from '../src/app/page';
+//import Main from '../src/pages/index';
 import Test from '../src/app/test/page';
 import '@testing-library/jest-dom';
 
@@ -26,7 +26,7 @@ describe('Home', () => {
 
     
   // });
-  it('Test the test (test)', () => {
+  it('Test the test page', () => {
     render(<Test />);
     // Check if the canvas element is in the document
     const testElement = screen.getByTestId('test');
