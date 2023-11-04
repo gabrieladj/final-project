@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import styles from './globals.css';
 import Head from 'next/head';
 import useSWR from 'swr'
-import get_camp_stats from '../lib/stats'
+import {get_camp_stats} from '../lib/stats'
 import io from "socket.io-client"
 let socket;
 
@@ -247,16 +247,21 @@ export default function Main(props) {
   useEffect(() => {
     const socketInitializer = async () => {
       await fetch('/api/server');
-      socket = io()
+      socket = io();
   
       socket.on('connect', () => {
-        console.log('connected')
+        console.log('connected');
       })
   
       socket.on('receive_message',(data) => {
         setMessageRecieve(data.message)
         alert(data.message)
         console.log("message was sent")
+      })
+
+      socket.on('camp_stats',(camp) => {
+        console.log('Received camp stats on client: ');
+        console.log(camp);
       })
     }
 
@@ -276,7 +281,6 @@ export default function Main(props) {
       const ctx = canvas.getContext('2d');
       // Add event listener for `click` events.
       canvas.addEventListener('click', function(event) {
-
         // get click position relative to scale of canvas
         const scale = defaultSize / canvas.height;
         const canvasX = Math.floor(event.offsetX * scale);
@@ -303,9 +307,17 @@ export default function Main(props) {
   const sendMessage = () =>{
     socket.emit("send_message" , {
       message : message
+      
     });
+    socket.emit("updateLevelFood",{
+      foodLevel : ""
+    })
     console.log('sending a message');
+
+    
   }
+
+  
 
   return (
     <div className="centered-container">
