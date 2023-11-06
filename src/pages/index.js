@@ -32,6 +32,21 @@ function loadImages(sources, callback) {
   }
 }
 
+function DropdownMenu() {
+  return (
+    <div>
+      <label htmlFor="dropdown">Select an option:</label>
+      <select id="dropdown" value={selectedOption} onChange={handleDropdownChange}>
+        <option value="option1">Camp 1</option>
+        <option value="option2">Camp 2</option>
+        <option value="option3">Camp 3</option>
+        <option value="option3">Camp 4</option>
+        <option value="option3">Camp 5</option>
+      </select>
+    </div>
+  );
+}
+
 export default function Main(props) {
 
   const [message,setMessage] = useState('')
@@ -200,7 +215,7 @@ export default function Main(props) {
   function handleInput(clickLoc, data, scale) {
     
   }
-
+  
   // initial useEffect function, will be called on page load
   useEffect(() => {
     console.log("use effect called");
@@ -328,21 +343,55 @@ export default function Main(props) {
       </div>
       {/* Side Panel */}
       <div className={`side-panel ${isPanelOpen ? 'open' : ''}`}>
-        {/* Panel content goes here */}
-        <label htmlFor="fname">Housing:</label>
-        <input type="text" id="fname" name="fname"></input>
-        <button onClick={togglePanel}>Toggle Panel</button>
+        {/* Panel content goes here, include drop down */}
+        <label htmlFor="dropdown">Select a camp: </label>
+        <select id="dropdown">
+        <option value="option1">Camp 1</option>
+        <option value="option2">Camp 2</option>
+        <option value="option3">Camp 3</option>
+        <option value="option2">Camp 4</option>
+        <option value="option3">Camp 5</option>
+        </select>
+        <br></br><br></br>
+
         <div>
+        <label htmlFor="fname">Food: </label>
           <input 
-            placeholder='message..'
+            placeholder='Enter food level..'
             onChange={(event) => {
               setMessage(event.target.value)
             }}
           />
-          <button onClick={sendMessage}>Send Message</button>
+          <br></br><br></br>
+          <label htmlFor="fname">Housing: </label>
+          <input 
+            placeholder='Enter housing level..'
+            onChange={(event) => {
+              setMessage(event.target.value)
+            }}
+          />
+          <br></br><br></br>
+          <label htmlFor="fname">Health: </label>
+          <input 
+            placeholder='Enter health level..'
+            onChange={(event) => {
+              setMessage(event.target.value)
+            }}
+          />
+          <br></br><br></br>
+          <label htmlFor="fname">Admin: </label>
+          <input 
+            placeholder='Enter admin level..'
+            onChange={(event) => {
+              setMessage(event.target.value)
+            }}
+          />
+          <button class ="bordered-button" onClick={sendMessage}>Update</button>
           <h1>{messageRecieve}</h1>
 
         </div>
+
+        <button class ="bordered-button" onClick={togglePanel}>Toggle Panel</button>
        
       </div>
       
