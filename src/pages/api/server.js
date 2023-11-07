@@ -35,14 +35,6 @@ const SocketHandler = (req, res) => {
             console.error(error)
           }
         })
-
-
-
-
-
-
-
-
     })
   }
   res.end()

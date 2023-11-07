@@ -1,158 +1,294 @@
 {
-    "camps" : {
+    "regions" : {
         "1" : {
-            "x": 165,
-            "y": 35,
-            "statsOffset": {
-                "x": 25,
-                "y": -35
+            "camps": {
+              "3" : {
+                  "x": 78,
+                  "y": 335
+              },
+              "4" : {
+                  "x": 115,
+                  "y": 445
+              }
+            },
+            "gens" : {
+                "4" : {
+                    "letter": "A",
+                    "x": 180,
+                    "y": 480
+                }
+            },
+            "campsStatsPos": {
+                "x": 15,
+                "y": 400
+            },
+            "labelPos": {
+                "x": 115,
+                "y": 400
             }
         },
         "2" : {
-            "x": 125,
-            "y": 115,
-            "statsOffset": {
-                "x": 25,
-                "y": -35
+            "gens": {
+                "1" : {
+                    "letter": "C",
+                    "x": 150,
+                    "y": 270
+                },
+                "2" : {
+                    "letter": "B",
+                    "x": 275,
+                    "y": 295
+                },
+                "3" : {
+                    "letter": "A",
+                    "x": 205,
+                    "y": 410
+                }
+            },
+            "genStatsPos": {
+                "x": 15,
+                "y": 400
+            },
+            "labelPos": {
+                "x": 170,
+                "y": 350
             }
         },
-        "3" : {
-            "x": 78,
-            "y": 335,
-            "statsOffset": {
-                "x": 25,
-                "y": -45
+        "3": {
+            "gens": {
+                "5" : {
+                    "letter": "A",
+                    "x": 255,
+                    "y": 460
+                },
+                "6" : {
+                    "letter": "B",
+                    "x": 380,
+                    "y": 470
+                }
+            },
+            "genStatsPos": {
+                "x": 15,
+                "y": 400
+            },
+            "labelPos": {
+                "x": 300,
+                "y": 500
             }
         },
         "4" : {
-            "x": 115,
-            "y": 445,
-            "statsOffset": {
-                "x": 25,
-                "y": -35
-            }
-        },
-        "5" : {
-            "x": 450,
-            "y": 345,
-            "statsOffset": {
-                "x": 25,
-                "y": -35
+            "camps": {
+              "5" : {
+                  "x": 450,
+                  "y": 345
+              }
+            },
+            "campsStatsPos": {
+                "x": 475,
+                "y": 250
+            },
+            "labelPos": {
+                "x": 370,
+                "y": 390
             }
         },
         "6" : {
-            "x": 630,
-            "y": 380,
-            "statsOffset": {
-                "x": 25,
-                "y": -35
+            "camps": {
+                "1" : {
+                    "x": 165,
+                    "y": 35
+                },
+                "2" : {
+                    "x": 125,
+                    "y": 115
+                }
+            },
+            "campsStatsPos": {
+                "x": 165,
+                "y": 75
+            },
+            "labelPos": {
+                "x": 160,
+                "y": 180
             }
         },
         "7" : {
-            "x": 630,
-            "y": 560,
-            "statsOffset": {
-                "x": 25,
-                "y": -35
+            "camps": {
+                "10" : {
+                    "x": 350,
+                    "y": 600
+                }
+            },
+            "campsStatsPos": {
+                "x": 270,
+                "y": 595
+            },
+            "labelPos": {
+                "x": 360,
+                "y": 650
             }
         },
         "8" : {
-            "x": 630,
-            "y": 610,
-            "statsOffset": {
-                "x": -45,
-                "y": -35
+            "camps": {
+                "7" : {
+                    "x": 630,
+                    "y": 560
+                },
+                "8" : {
+                    "x": 630,
+                    "y": 610
+                },
+                "9" : {
+                    "x": 550,
+                    "y": 650
+                }
+            },
+            "campsStatsPos": {
+                "x": 660,
+                "y": 610
+            },
+            "labelPos": {
+                "x": 570,
+                "y": 560
             }
         },
-        "9" : {
-            "x": 550,
-            "y": 650,
-            "statsOffset": {
-                "x": 25,
-                "y": -10
+        "11" : {
+            "camps": {
+                "6" : {
+                    "x": 630,
+                    "y": 380
+                }
+            },
+            "campsStatsPos": {
+                "x": 660,
+                "y": 345
+            },
+            "labelPos": {
+                "x": 550,
+                "y": 290
             }
-        },
-        "10" : {
-            "x": 350,
-            "y": 600,
-            "statsOffset": {
-                "x": 25,
-                "y": -35
-            }
-        }
-    },
-    "generation_points" : {
-        "1" : {
-            "letter": "C",
-            "x": 150,
-            "y": 270
-        },
-        "2" : {
-            "letter": "B",
-            "x": 275,
-            "y": 295
-        },
-        "3" : {
-            "letter": "A",
-            "x": 205,
-            "y": 410
-        },
-        "4" : {
-            "letter": "A",
-            "x": 180,
-            "y": 480
-        },
-        "5" : {
-            "letter": "A",
-            "x": 255,
-            "y": 460
-        },
-        "6" : {
-            "letter": "B",
-            "x": 380,
-            "y": 470
         }
     },
     "paths" : {
         "1" : {
-            "start": "c1",
-            "end": "c2"
+            "start": {
+                "type": "camp",
+                "region": "6",
+                "node": "1"
+            },
+            "end": {
+                "type": "camp",
+                "region": "6",
+                "node": "2"
+            }
         },
         "2" : {
-            "start": "c2",
-            "end": "g1"
+            "start": {
+                "type": "camp",
+                "region": "6",
+                "node": "2"
+            },
+            "end": {
+                "type": "gen",
+                "region": "2",
+                "node": "1"
+            }
         },
         "3" : {
-            "start": "g1",
-            "end": "c3"
+            "start": {
+                "type": "gen",
+                "region": "2",
+                "node": "1"
+            },
+            "end": {
+                "type": "camp",
+                "region": "1",
+                "node": "3"
+            }
         },
         "4" : {
-            "start": "g1",
-            "end": "g2"
+            "start": {
+                "type": "gen",
+                "region": "2",
+                "node": "1"
+            },
+            "end": {
+                "type": "gen",
+                "region": "2",
+                "node": "2"
+            }
         },
         "5" : {
-            "start": "c3",
-            "end": "c4"
+            "start": {
+                "type": "camp",
+                "region": "1",
+                "node": "3"
+            },
+            "end": {
+                "type": "camp",
+                "region": "1",
+                "node": "4"
+            }
         },
         "6" : {
-            "start": "c4",
-            "end": "g4"
+            "start": {
+                "type": "camp",
+                "region": "1",
+                "node": "4"
+            },
+            "end": {
+                "type": "gen",
+                "region": "1",
+                "node": "4"
+            }
         },
         "7" : {
-            "start": "c4",
-            "end": "g3"
+            "start": {
+                "type": "camp",
+                "region": "1",
+                "node": "4"
+            },
+            "end": {
+                "type": "gen",
+                "region": "2",
+                "node": "3"
+            }
         },
         "8" : {
-            "start": "g3",
-            "end": "g2"
+            "start": {
+                "type": "gen",
+                "region": "2",
+                "node": "3"
+            },
+            "end": {
+                "type": "gen",
+                "region": "2",
+                "node": "2"
+            }
         },
         "9" : {
-            "start": "g2",
-            "end": "c5"
+            "start": {
+                "type": "gen",
+                "region": "2",
+                "node": "2"
+            },
+            "end": {
+                "type": "camp",
+                "region": "4",
+                "node": "5"
+            }
         },
         "10" : {
-            "start": "g2",
-            "end": "c5",
+            "start": {
+                "type": "gen",
+                "region": "2",
+                "node": "2"
+            },
+            "end": {
+                "type": "camp",
+                "region": "4",
+                "node": "5"
+            },
             "cp1": {
                 "x": 100,
                 "y": -40
@@ -163,52 +299,136 @@
             }
         },
         "11" : {
-            "start": "c5",
-            "end": "c6"
+            "start": {
+                "type": "camp",
+                "region": "4",
+                "node": "5"
+            },
+            "end": {
+                "type": "camp",
+                "region": "11",
+                "node": "6"
+            }
         },
         "12" : {
-            "start": "c6",
-            "end": "c7"
+            "start": {
+                "type": "camp",
+                "region": "11",
+                "node": "6"
+            },
+            "end": {
+                "type": "camp",
+                "region": "8",
+                "node": "7"
+            }
         },
         "13" : {
-            "start": "c7",
-            "end": "c8"
+            "start": {
+                "type": "camp",
+                "region": "8",
+                "node": "7"
+            },
+            "end": {
+                "type": "camp",
+                "region": "8",
+                "node": "8"
+            }
         },
         "14" : {
-            "start": "c8",
-            "end": "g6"
+            "start": {
+                "type": "camp",
+                "region": "8",
+                "node": "8"
+            },
+            "end": {
+                "type": "gen",
+                "region": "3",
+                "node": "6"
+            }
         },
         "15" : {
-            "start": "c8",
-            "end": "c9"
+            "start": {
+                "type": "camp",
+                "region": "8",
+                "node": "8"
+            },
+            "end": {
+                "type": "camp",
+                "region": "8",
+                "node": "9"
+            }
         },
         "16" : {
-            "start": "c9",
-            "end": "c10"
+            "start": {
+                "type": "camp",
+                "region": "8",
+                "node": "9"
+            },
+            "end": {
+                "type": "camp",
+                "region": "7",
+                "node": "10"
+            }
         },
         "17" : {
-            "start": "c9",
-            "end": "c10"
+            "start": {
+                "type": "camp",
+                "region": "7",
+                "node": "10"
+            },
+            "end": {
+                "type": "gen",
+                "region": "3",
+                "node": "6"
+            }
         },
         "18" : {
-            "start": "c10",
-            "end": "g6"
+            "start": {
+                "type": "gen",
+                "region": "3",
+                "node": "6"
+            },
+            "end": {
+                "type": "camp",
+                "region": "4",
+                "node": "5"
+            }
         },
         "19" : {
-            "start": "g6",
-            "end": "c5"
+            "start": {
+                "type": "camp",
+                "region": "7",
+                "node": "10"
+            },
+            "end": {
+                "type": "gen",
+                "region": "1",
+                "node": "4"
+            }
         },
         "20" : {
-            "start": "c10",
-            "end": "g4"
+            "start": {
+                "type": "gen",
+                "region": "1",
+                "node": "4"
+            },
+            "end": {
+                "type": "gen",
+                "region": "3",
+                "node": "5"
+            }
         },
         "21" : {
-            "start": "g4",
-            "end": "g5"
-        },
-        "22" : {
-            "start": "g5",
-            "end": "g6"
+            "start": {
+                "type": "gen",
+                "region": "3",
+                "node": "5"
+            },
+            "end": {
+                "type": "gen",
+                "region": "3",
+                "node": "6"
+            }
         }       
     }
 }
