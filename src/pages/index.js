@@ -425,12 +425,12 @@ export default function Main(props) {
               setMessage(event.target.value)
             }}
           />
-          <button class ="bordered-button" onClick={sendMessage}>Update</button>
+          <button className ="bordered-button" onClick={sendMessage}>Update</button>
           <h1>{messageRecieve}</h1>
 
         </div>
 
-        <button class ="bordered-button" onClick={togglePanel}>Toggle Panel</button>
+        <button className ="bordered-button" onClick={togglePanel}>Toggle Panel</button>
        
       </div>
       
