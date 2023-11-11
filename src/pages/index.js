@@ -35,6 +35,9 @@ export default function Main(props) {
 
   const [message,setMessage] = useState('')
   const [messageRecieve,setMessageRecieve]= useState("")
+  const [IndcampStats, setIndCampStats] = useState(null);
+  const [selectedRegion,setselectedRegion] = useState(null)
+  const [isRegionSelected,setisRegionSelected] = useState(false)
 
 
   const canvasRef = useRef(null);
@@ -311,6 +314,17 @@ export default function Main(props) {
         console.log(routes);
         setRouteStats(routes)
       });
+      socket.on('campResult', (result) => {
+        console.log('Received camp:');
+        console.log(result);
+        setIndCampStats(result)
+  
+        // Handle the result as needed
+      });
+    
+
+
+      
     }
 
     socketInitializer();
@@ -348,6 +362,10 @@ export default function Main(props) {
               if (clickLoc.x < node.x + campClickTarget && clickLoc.x > node.x - campClickTarget
                   && clickLoc.y < node.y + campClickTarget && clickLoc.y > node.y - campClickTarget) {
                 console.log ("clicked on camp " + (campName));
+                socket.emit('campClick',(campName));
+                setisRegionSelected(true);
+                setselectedRegion((regionName))
+
               }
             });
           }
@@ -379,6 +397,23 @@ export default function Main(props) {
       </div>
       {/* Side Panel */}
       <div className={`side-panel ${isPanelOpen ? 'open' : ''}`}>
+
+        <div>
+            {campStats && isRegionSelected &&(
+            <div>
+
+            <h2>ID: </h2>
+                
+            <h2>Camp Information</h2>
+            <p>ID: {selectedRegion}</p>
+            <p>Food: {campStats[selectedRegion].food}</p>
+            <p>HealthCare: {campStats[selectedRegion].healthcare}</p>
+            <p>Housing: {campStats[selectedRegion].housing}</p>
+            <p>Admin: {campStats[selectedRegion].admin}</p>
+            </div>
+          )}
+        </div>
+          
         {/* Panel content goes here, include drop down */}
         <label htmlFor="dropdown">Deployable region: </label>
         <select id="dropdown" onChange={(event) => {

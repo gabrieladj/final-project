@@ -39,6 +39,8 @@ model RefugeeGen {
   admin          Int           @default(0)
 }
 
+
+
 // Route model (Golden Lines– Refugee/Supply Routes)
 model Route { 
   id             Int           @id @default(autoincrement())
