@@ -1,22 +1,34 @@
 import { prisma } from "../server/db/client";
 
-export  async function get_all_camp_stats() {
-    let stats = await prisma.RefugeeCamp.findMany({
-        select: {
-            id: true,
-            foodLevel: true,
-            housingLevel: true,
-            administrationLevel: true,
-            healthcareLevel: true
-        },
-    });
-    return stats;
+export  async function getAllCampStats() {
+    const stats = await prisma.DeployableRegion.findMany();
+
+    // parse it into object with key being the camp id
+    // that way we dont have to search for the right one on the client
+    let data = {};
+    if (stats) {
+        for (const camp of stats) {
+            data[camp.id] = {
+                food: camp.food,
+                healthcare: camp.healthcare,
+                housing: camp.housing,
+                admin: camp.admin,
+                refugueesPresent: camp.refugueesPresent
+            }
+        }
+    }
+    return data;
 }
 
-export  function get_camp_stats() {
-    let stats = {foodLevel: 100,
-                 healthcareLevel: 5,
-                 housingLevel: 5,
-                 administrationLevel: 3};
-    return stats;
+export async function getAllRoutes() {
+    const routes = await prisma.Route.findMany();
+    let data = {};
+    if (routes) {
+        for (const route of routes) {
+            data[route.id] = {
+                isOpen: route.isOpen
+            }
+        }
+    }
+    return data;
 }

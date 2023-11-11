@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import styles from './globals.css';
 import Head from 'next/head';
 import useSWR from 'swr'
-import {get_camp_stats} from '../lib/stats'
 import io from "socket.io-client"
 let socket;
 
@@ -48,16 +47,15 @@ export default function Main(props) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const imagesRef = useRef(null);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
-
-
   // Function to toggle the panel's open/close state
   const togglePanel = () => {
     setIsPanelOpen(!isPanelOpen);
   };
-
   const dataRef = useRef(null)
   const { data, error } = useSWR('/map-nodes.json', fetcher)
   const [campStats, setCampStats] = useState(null);
+  const [routeStats, setRouteStats] = useState(null);
+
 
   if (error) { 
     console.log("error loading json");
@@ -90,13 +88,13 @@ export default function Main(props) {
     }
     ctx.fillStyle = 'black';
     ctx.font = "12px serif";
-    ctx.fillText(stats.foodLevel, textPos.x, textPos.y);
+    ctx.fillText(stats.food, textPos.x, textPos.y);
     textPos.y += imgSize;
-    ctx.fillText(stats.housingLevel, textPos.x, textPos.y);
+    ctx.fillText(stats.housing, textPos.x, textPos.y);
     textPos.y += imgSize;
-    ctx.fillText(stats.healthcareLevel, textPos.x, textPos.y);
+    ctx.fillText(stats.healthcare, textPos.x, textPos.y);
     textPos.y += imgSize;
-    ctx.fillText(stats.administrationLevel, textPos.x, textPos.y);
+    ctx.fillText(stats.admin, textPos.x, textPos.y);
   }
 
   function draw(ctx, campStats) {
@@ -109,9 +107,17 @@ export default function Main(props) {
 
     // Drawing paths (do this first so nodes are rendered on top)
     ctx.lineWidth = 5;
-    ctx.strokeStyle = '#e8bd20';
+    
     ctx.beginPath();
     Object.keys(data['paths']).map((path, i) => {
+      ctx.strokeStyle = '#e8bd20';
+      // check if we have data from the database for this path
+      if (routeStats != null && path in routeStats) {
+        if (!routeStats[path].isOpen) {
+          ctx.strokeStyle = 'red';
+        }
+      }
+
       const node = data['paths'][path];
       const startNode = data['paths'][path].start;
       const endNode = data['paths'][path].end;
@@ -172,12 +178,21 @@ export default function Main(props) {
       // Drawing camps (blue squares)
       if ('camps' in region) {
         Object.keys(region['camps']).map((camp, j) => {
-          ctx.fillRect(region['camps'][camp].x - campSize / 2, region['camps'][camp].y - campSize / 2, campSize, campSize);
-          if (drawCampNum) {
-            ctx.fillStyle = 'white';
-            ctx.font = "12px serif";
-            ctx.fillText(camp, region['camps'][camp].x-3, region['camps'][camp].y+4);
-            ctx.fillStyle = '#0000CC';
+          const campNode = region['camps'][camp];
+          ctx.fillRect(campNode.x - campSize / 2, campNode.y - campSize / 2, campSize, campSize);
+          // if (drawCampNum) {
+          //   ctx.fillStyle = 'white';
+          //   ctx.font = "12px serif";
+          //   ctx.fillText(camp, campNode.x-3, campNode.y+4);
+          //   ctx.fillStyle = '#0000CC';
+          // }
+          // draw number of refugees on camp
+          if (campStats && campStats[regionNum] != null) {
+              const refugueesPresent = campStats[regionNum].refugueesPresent;
+              ctx.fillStyle = 'white';
+              ctx.font = "12px serif";
+              ctx.fillText(refugueesPresent, campNode.x-3, campNode.y+4);
+              ctx.fillStyle = '#0000CC';
           }
         });
       }
@@ -202,7 +217,7 @@ export default function Main(props) {
           }
         });
       }
-      // draw region number label
+      // draw region label (refugees present)
       if ('labelPos' in region) { 
         ctx.font = "16px serif"; 
         ctx.fillStyle = 'green';
@@ -210,13 +225,17 @@ export default function Main(props) {
         ctx.fillStyle = '#0000CC';
       }
       // camp stats
-      var stats = get_camp_stats();
-      if ('campsStatsPos' in region) { 
+      if ('campsStatsPos' in region && campStats 
+          && campStats[regionNum] != null)
+      { 
+        // get stats for this region from campStats
+        // camp stats should have data from the database about each region
+        var stats = campStats[regionNum];
         const statsPostion =  region['campsStatsPos'];
         drawStats(ctx, statsPostion, stats);
       }
       
-    });    
+    });
   }
 
   function handleInput(clickLoc, data, scale) {
@@ -245,7 +264,7 @@ export default function Main(props) {
         canvas.height = size;
       }
       ctx.scale(size / defaultSize, size / defaultSize);
-      draw(ctx);
+      draw(ctx, campStats);
     }
 
     // list of all the images we need to load
@@ -259,7 +278,7 @@ export default function Main(props) {
     loadImages(sources, function(loadedImages) {
       imagesRef.current = loadedImages;
       setImgLoaded(true);
-      draw(ctx);
+      draw(ctx, campStats);
     });
 
     resizeCanvas();
@@ -281,10 +300,16 @@ export default function Main(props) {
         console.log("message was sent")
       });
 
-      socket.on('camp_stats',(campStats) => {
+      socket.on('camp_stats',(stats) => {
         console.log('Received camp stats on client: ');
-        console.log(campStats);
-        setCampStats(campStats);
+        console.log(stats);
+        setCampStats (stats);
+      });
+
+      socket.on('routes',(routes) => {
+        console.log('Received routes on client: ');
+        console.log(routes);
+        setRouteStats(routes)
       });
     }
 
@@ -322,15 +347,15 @@ export default function Main(props) {
               
               if (clickLoc.x < node.x + campClickTarget && clickLoc.x > node.x - campClickTarget
                   && clickLoc.y < node.y + campClickTarget && clickLoc.y > node.y - campClickTarget) {
-                console.log ("clicked on camp " + (i+1));
+                console.log ("clicked on camp " + (campName));
               }
             });
           }
         });
       }, false);
-      draw(ctx);
+      draw(ctx, campStats);
     }
-  }, [data] );
+  }, [data, campStats] );
 
   const sendMessage = () =>{
     socket.emit("send_message" , {
@@ -345,8 +370,6 @@ export default function Main(props) {
     
   }
 
-  
-
   return (
     <div className="centered-container">
       <div id="canvas-container" className={styles.Canvas2D}>
@@ -357,13 +380,16 @@ export default function Main(props) {
       {/* Side Panel */}
       <div className={`side-panel ${isPanelOpen ? 'open' : ''}`}>
         {/* Panel content goes here, include drop down */}
-        <label htmlFor="dropdown">Select a camp: </label>
-        <select id="dropdown">
-        <option value="option1">Camp 1</option>
-        <option value="option2">Camp 2</option>
-        <option value="option3">Camp 3</option>
-        <option value="option2">Camp 4</option>
-        <option value="option3">Camp 5</option>
+        <label htmlFor="dropdown">Deployable region: </label>
+        <select id="dropdown" onChange={(event) => {
+              setMessage(event.target.value)
+            }}>
+          <option value="1">Region 1</option>
+          <option value="4">Region 4</option>
+          <option value="6">Region 6</option>
+          <option value="7">Region 7</option>
+          <option value="8">Region 8</option>
+          <option value="11">Region 11</option>
         </select>
         <br></br><br></br>
 

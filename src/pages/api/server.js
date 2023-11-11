@@ -1,6 +1,6 @@
 const {Server} = require("socket.io")
 import { prisma } from "../../server/db/client";
-import {get_camp_stats, get_all_camp_stats} from "../../lib/stats"
+import {getAllCampStats, getAllRoutes} from "../../lib/stats"
 
 const SocketHandler = (req, res) => {
   if (res.socket.server.io) {
@@ -12,9 +12,11 @@ const SocketHandler = (req, res) => {
 
     io.on("connection",async (socket) =>{
         console.log(`User connected: ${socket.id}`);
-
-        const campStats =  await get_all_camp_stats();
+        // client has just connected, send initialstats
+        const campStats =  await getAllCampStats();
         socket.emit('camp_stats', campStats);
+        const routes =  await getAllRoutes();
+        socket.emit('routes', routes);
         
         socket.on("send_message",(data) => {
             socket.broadcast.emit("receive_message", data);
