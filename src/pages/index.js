@@ -49,6 +49,7 @@ export default function Main(props) {
   const campSize = 25; // size of blue square
   const [imgLoaded, setImgLoaded] = useState(false);
   const imagesRef = useRef(null);
+  
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   // Function to toggle the panel's open/close state
   const togglePanel = () => {
@@ -397,7 +398,7 @@ export default function Main(props) {
       </div>
       {/* Side Panel */}
       <div className={`side-panel ${isPanelOpen ? 'open' : ''}`}>
-
+        
         <div>
             {campStats && isRegionSelected &&(
             <div>
@@ -458,17 +459,23 @@ export default function Main(props) {
             placeholder='Enter admin level..'
             onChange={(event) => {
               setMessage(event.target.value)
-            }}
-          />
+            }}/>
           <button className ="bordered-button" onClick={sendMessage}>Update</button>
           <h1>{messageRecieve}</h1>
-
         </div>
-
-        <button className ="bordered-button" onClick={togglePanel}>Toggle Panel</button>
-       
-      </div>
+        <button className ="bordered-button" onClick={togglePanel} style={{ position: 'fixed', bottom: 0, right: 0 }}>Toggle Panel</button>
       
+      </div>
+ {/* "Open Panel" button outside of the side panel */}
+ <div className={`side-panel ${isPanelOpen ? 'closed' : ''}`}>
+        {!isPanelOpen && (
+          <div className="open-panel-button-container">
+            <button className="bordered-button" onClick={togglePanel}>
+              Open Panel
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
