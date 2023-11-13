@@ -4,6 +4,7 @@ import styles from './globals.css';
 import Head from 'next/head';
 import useSWR from 'swr'
 import io from "socket.io-client"
+import { getCampCapacity } from "../lib/utility"
 let socket;
 
 async function fetcher(url) {
@@ -42,11 +43,12 @@ export default function Main(props) {
 
   const canvasRef = useRef(null);
   const defaultSize = 720;
-  var drawCampNum = true,
+  var drawCampNum = false,
       drawGenNum = false,
       drawPathNum = false;
   const genRadius = 9;
-  const campSize = 25; // size of blue square
+  const campSize = 26; // size of blue square
+  const campDangerSize = 35; // size of red box around the blue square
   const [imgLoaded, setImgLoaded] = useState(false);
   const imagesRef = useRef(null);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
@@ -58,6 +60,7 @@ export default function Main(props) {
   const { data, error } = useSWR('/map-nodes.json', fetcher)
   const [campStats, setCampStats] = useState(null);
   const [routeStats, setRouteStats] = useState(null);
+  const [genStats, setGenStats] = useState(null);
 
 
   if (error) { 
@@ -65,44 +68,88 @@ export default function Main(props) {
   }
   if (!data) console.log('loading map data...');
 
-  function drawStats(ctx, position, stats) {
-    const ySpacing = 21;
+  function drawCampStats(ctx, position, stats) {
     const imgSize = 20;
+    const ySpacing = 3;
     const margin   = {'x': 4,
                       'y': 4};
     const imagePos = {'x': position.x+margin.x,
                       'y': position.y+margin.y};
     const textPos  = {'x': position.x + margin.x + imgSize + 5,
-                      'y': position.y + margin.y + (imgSize/2) + 5};
-
-    ctx.font = "12px serif";
-
-    ctx.fillStyle = "#E7E0CA";
-    ctx.fillRect(position.x, position.y, imgSize+35, (imgSize*4)+margin.y*2);
+                      'y': position.y + margin.y + (imgSize/2) + 4};
+    const boxHeight = ((imgSize * 5) + (margin.y * 2) + (ySpacing * 4));
+    const boxWidth = imgSize + 35;
+    const inset = 1;
+    ctx.fillStyle = "black";
+    ctx.fillRect(position.x, position.y, boxWidth, boxHeight);
+    ctx.fillStyle = "#efefef";
+    ctx.fillRect(position.x + inset, position.y + inset, boxWidth - inset * 2, boxHeight - inset * 2);
     
+    // drawing icons
     if (imagesRef.current != null ) {
-        ctx.drawImage(imagesRef.current.food, imagePos.x, imagePos.y, imgSize, imgSize);
-        imagePos.y += imgSize;
-        ctx.drawImage(imagesRef.current.house, imagePos.x, imagePos.y, imgSize, imgSize);
-        imagePos.y += imgSize;
-        ctx.drawImage(imagesRef.current.health, imagePos.x, imagePos.y, imgSize, imgSize);
-        imagePos.y += imgSize;
-        ctx.drawImage(imagesRef.current.admin, imagePos.x, imagePos.y, imgSize, imgSize);
+      const imgArray = [imagesRef.current.refugee, imagesRef.current.food,
+                      imagesRef.current.health, imagesRef.current.house, imagesRef.current.admin];
+      imgArray.forEach((img) => {
+        ctx.drawImage(img, imagePos.x, imagePos.y, imgSize, imgSize);
+        imagePos.y += imgSize + ySpacing;
+      });
     }
-    ctx.fillStyle = 'black';
+
+    // drawing stats text
     ctx.font = "12px serif";
-    ctx.fillText(stats.food, textPos.x, textPos.y);
-    textPos.y += imgSize;
-    ctx.fillText(stats.housing, textPos.x, textPos.y);
-    textPos.y += imgSize;
-    ctx.fillText(stats.healthcare, textPos.x, textPos.y);
-    textPos.y += imgSize;
-    ctx.fillText(stats.admin, textPos.x, textPos.y);
+    ctx.fillStyle = "black";
+    const statsArray = [stats.refugeesPresent, stats.food, stats.housing, stats.healthcare,stats.admin];
+    statsArray.forEach((stat) => {
+      ctx.fillText(stat, textPos.x, textPos.y);
+      textPos.y += imgSize + ySpacing;
+    });
   }
 
-  function draw(ctx, campStats) {
-    // if the data object loaded?
-    if (!data) { return; }
+  function drawGenStats(ctx, position, stats) {
+    
+    const imgSize = 20;
+    const ySpacing = 3;
+    const margin   = {'x': 4,
+                      'y': 4};
+    const imagePos = {'x': position.x+margin.x,
+                      'y': position.y+margin.y};
+    const textPos  = {'x': position.x + margin.x + imgSize + 5,
+                      'y': position.y + margin.y + (imgSize/2) + 4};
+    const boxHeight = ((imgSize * 3) + (margin.y * 2) + (ySpacing * 2));
+    const boxWidth = imgSize + 35;
+    const inset = 1;
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(position.x, position.y, boxWidth, boxHeight);
+    ctx.fillStyle = "#efefef";
+    ctx.fillRect(position.x + inset, position.y + inset, 
+                 boxWidth - inset * 2, boxHeight - inset * 2);
+    
+    // drawing icons
+    if (imagesRef.current != null ) {
+      const imgArray = [imagesRef.current.food, imagesRef.current.health, 
+                        imagesRef.current.admin];
+      imgArray.forEach((img) => {
+        ctx.drawImage(img, imagePos.x, imagePos.y, imgSize, imgSize);
+        imagePos.y += imgSize + ySpacing;
+      });
+    }
+
+    // drawing stats text
+    ctx.font = "12px serif";
+    ctx.fillStyle = "black";
+    const statsArray = [stats.food, stats.healthcare, stats.admin];
+    statsArray.forEach((stat) => {
+      ctx.fillText(stat, textPos.x, textPos.y);
+      textPos.y += imgSize + ySpacing;
+    });
+  }
+
+  function draw(ctx, campStats, genStats, routeStats) {
+    // are the stats and map json loaded yet?
+    if (!data || !campStats || !routeStats || !genStats) {
+      return;
+    }
     
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
@@ -175,35 +222,56 @@ export default function Main(props) {
     });
 
     // loop through regions
-    Object.keys(data['regions']).map((regionNum, i) => {
-      ctx.fillStyle = '#0000CC';
+    Object.keys(data['regions']).map((regionNum) => {
       const region = data['regions'][regionNum];
+      // how much to offset the inner part of the square
+      const bevelOffset = Math.ceil(campSize * .1); // 10%
+      // how much to offset the outer part of the square (danger indicator)
+      const dangerOffset = Math.ceil(campSize * .1); // 25%
       // Drawing camps (blue squares)
       if ('camps' in region) {
-        Object.keys(region['camps']).map((camp, j) => {
+        // get camp capacity based on the stats
+        const campCapacity = getCampCapacity(campStats[regionNum].food, campStats[regionNum].healthcare,
+                                             campStats[regionNum].housing, campStats[regionNum].admin);
+        // loop through all the camps in the region
+        Object.keys(region['camps']).map((camp) => {
           const campNode = region['camps'][camp];
+
+          // is this camp in danger?
+          if (campCapacity < campStats[regionNum].refugeesPresent) {
+            // draw a red box around the blue square
+            ctx.fillStyle = 'red';
+            ctx.fillRect((campNode.x - campSize / 2) - dangerOffset, (campNode.y - campSize / 2) - dangerOffset,
+                          campSize + dangerOffset * 2, campSize + dangerOffset * 2);
+          }
+          // draw outer square
+          ctx.fillStyle = '#2e35c0'; // blue
           ctx.fillRect(campNode.x - campSize / 2, campNode.y - campSize / 2, campSize, campSize);
+          // draw inner square
+          ctx.fillStyle = '#3c66ba'; // light blue
+          ctx.fillRect((campNode.x - campSize / 2) + bevelOffset, (campNode.y - campSize / 2) + bevelOffset,
+                        campSize - bevelOffset*2, campSize - bevelOffset*2);
+          
           // if (drawCampNum) {
           //   ctx.fillStyle = 'white';
           //   ctx.font = "12px serif";
           //   ctx.fillText(camp, campNode.x-3, campNode.y+4);
           //   ctx.fillStyle = '#0000CC';
           // }
-          // draw number of refugees on camp
-          if (campStats && campStats[regionNum] != null) {
-              const refugueesPresent = campStats[regionNum].refugueesPresent;
-              ctx.fillStyle = 'white';
-              ctx.font = "12px serif";
-              ctx.fillText(refugueesPresent, campNode.x-3, campNode.y+4);
-              ctx.fillStyle = '#0000CC';
-          }
+          // draw capacity on the camp
+          
+          ctx.fillStyle = 'white';
+          ctx.font = "12px serif";
+          const textWidth = ctx.measureText(campCapacity).width;
+          ctx.fillText(campCapacity, campNode.x - textWidth / 2, campNode.y + 4);
+          ctx.fillStyle = '#0000CC';
         });
       }
 
       // Drawing generation points (red circles)
       if ('gens' in region) {
         const circleColor = '#FF0000';
-        Object.keys(region['gens']).map((gen_point, i) => {
+        Object.keys(region['gens']).map((gen_point) => {
           const genNode = region['gens'][gen_point];
           ctx.beginPath();
           ctx.arc(genNode.x, genNode.y, genRadius, 0, 2 * Math.PI);
@@ -211,16 +279,26 @@ export default function Main(props) {
           ctx.fill();
           ctx.fillStyle = 'white';
           ctx.font = "12px serif";
-          ctx.fillText(genNode.letter, genNode.x-4, genNode.y+4);
+          const textWidth = ctx.measureText(genNode.letter).width;
+          ctx.fillText(genNode.letter, genNode.x-textWidth/2, genNode.y+4);
           ctx.fillStyle = circleColor;
+
+          // get stats for this region from campStats
+          // camp stats should have data from the database about each region
+          var stats = genStats[gen_point];
+          console.log("GEN NODE: ")
+          console.log(genNode);
+          const statsPostion = genNode.statsPos;
+          drawGenStats(ctx, statsPostion, stats);
+          
           if (drawGenNum) {
             ctx.fillStyle = 'Black';
-            ctx.fillText((i+1), genNode.x+15, genNode.y+15);
+            ctx.fillText((gen_point), genNode.x+15, genNode.y+15);
             ctx.fillStyle = circleColor;
           }
         });
       }
-      // draw region label (refugees present)
+      // draw region label 
       if ('labelPos' in region) { 
         ctx.font = "16px serif"; 
         ctx.fillStyle = 'green';
@@ -234,8 +312,8 @@ export default function Main(props) {
         // get stats for this region from campStats
         // camp stats should have data from the database about each region
         var stats = campStats[regionNum];
-        const statsPostion =  region['campsStatsPos'];
-        drawStats(ctx, statsPostion, stats);
+        const statsPostion = region['campsStatsPos'];
+        drawCampStats(ctx, statsPostion, stats);
       }
       
     });
@@ -267,11 +345,12 @@ export default function Main(props) {
         canvas.height = size;
       }
       ctx.scale(size / defaultSize, size / defaultSize);
-      draw(ctx, campStats);
+      draw(ctx, campStats, genStats, routeStats);
     }
 
     // list of all the images we need to load
     var sources = {
+      refugee: '/refugee.png',
       food: '/food.png',
       admin: '/admin.png',
       health: '/health.png',
@@ -281,7 +360,7 @@ export default function Main(props) {
     loadImages(sources, function(loadedImages) {
       imagesRef.current = loadedImages;
       setImgLoaded(true);
-      draw(ctx, campStats);
+      draw(ctx, campStats, genStats, routeStats);
     });
 
     resizeCanvas();
@@ -314,6 +393,12 @@ export default function Main(props) {
         console.log(routes);
         setRouteStats(routes)
       });
+      socket.on('gens', (gens) => {
+        console.log('Received gen points on client: ');
+        console.log(gens);
+        setGenStats(gens);
+      });
+
       socket.on('campResult', (result) => {
         console.log('Received camp:');
         console.log(result);
@@ -371,7 +456,7 @@ export default function Main(props) {
           }
         });
       }, false);
-      draw(ctx, campStats);
+      draw(ctx, campStats, genStats, routeStats);
     }
   }, [data, campStats] );
 
@@ -462,13 +547,9 @@ export default function Main(props) {
           />
           <button className ="bordered-button" onClick={sendMessage}>Update</button>
           <h1>{messageRecieve}</h1>
-
         </div>
-
         <button className ="bordered-button" onClick={togglePanel}>Toggle Panel</button>
-       
       </div>
-      
     </div>
   );
 }

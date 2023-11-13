@@ -25,7 +25,7 @@ model DeployableRegion {
   healthcare           Int           @default(0)
   housing              Int           @default(0)
   admin                Int           @default(0)
-  refugueesPresent     Int           @default(0)
+  refugeesPresent      Int           @default(0)
 }
 
 
@@ -34,6 +34,8 @@ model DeployableRegion {
 model RefugeeGen { 
   id             Int           @id @default(autoincrement()) 
   genType        String        @default("ORDERLY")
+  totalRefugees  Int           @default(0)
+  newRefugees    Int           @default(0)
   food           Int           @default(0)
   healthcare     Int           @default(0)
   admin          Int           @default(0)
@@ -45,4 +47,5 @@ model RefugeeGen {
 model Route { 
   id             Int           @id @default(autoincrement())
   isOpen         Boolean       @default(true)
+  supplyCap      Int           @default(1)
 }
