@@ -59,7 +59,7 @@ body {
   right: -300px; /* Adjust the width as needed */
   height: 100%;
   width: 300px; /* Adjust the width as needed */
-  background-color: red;
+  background-color: #7d7a78;
   color: black;
   box-shadow: -5px 0 5px rgba(0, 0, 0, 0.2);
   transition: right 0.3s ease-in-out;
@@ -67,6 +67,15 @@ body {
 
 .side-panel.open {
   right: 0;
+}
+
+.open-panel-button-container {
+  position: fixed;
+  top: 98.2%;
+  right: 0;
+  background-color: #7d7a78;
+  color: black;
+  transform: translate(0, -50%);
 }
 
 .bordered-button {
