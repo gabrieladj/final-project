@@ -13,7 +13,7 @@ export  async function getAllCampStats() {
                 healthcare: camp.healthcare,
                 housing: camp.housing,
                 admin: camp.admin,
-                refugueesPresent: camp.refugueesPresent
+                refugeesPresent: camp.refugeesPresent
             }
         }
     }
@@ -27,6 +27,24 @@ export async function getAllRoutes() {
         for (const route of routes) {
             data[route.id] = {
                 isOpen: route.isOpen
+            }
+        }
+    }
+    return data;
+}
+
+export async function getAllGens() {
+    const gens = await prisma.RefugeeGen.findMany();
+    let data = {};
+    if (gens) {
+        for (const gen of gens) {
+            data[gen.id] = {
+                genType: gen.genType,
+                totalRefugees: gen.totalRefugees,
+                newRefugees: gen.newRefugees,
+                food: gen.food,
+                healthcare: gen.healthcare,
+                admin: gen.admin
             }
         }
     }

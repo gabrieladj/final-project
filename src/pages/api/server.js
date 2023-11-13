@@ -1,6 +1,6 @@
 const {Server} = require("socket.io")
 import { prisma } from "../../server/db/client";
-import {getAllCampStats, getAllRoutes} from "../../lib/stats"
+import {getAllCampStats, getAllRoutes, getAllGens} from "../../lib/stats"
 
 const SocketHandler = (req, res) => {
   if (res.socket.server.io) {
@@ -12,15 +12,18 @@ const SocketHandler = (req, res) => {
 
     io.on("connection",async (socket) =>{
         console.log(`User connected: ${socket.id}`);
-        // client has just connected, send initialstats
+
+        // client has just connected, get initial stats
         const campStats =  await getAllCampStats();
-        socket.emit('camp_stats', campStats);
         const routes =  await getAllRoutes();
+        const gens =  await getAllGens();
+        // send initial stats to client who connected
+        socket.emit('camp_stats', campStats);
         socket.emit('routes', routes);
+        socket.emit('gens', gens);
         
         socket.on("send_message",(data) => {
             socket.broadcast.emit("receive_message", data);
-            //console.log('Recieved message');
         });
 
         socket.on('updateLevelFood',async (data) => {
@@ -28,8 +31,6 @@ const SocketHandler = (req, res) => {
             const updateFood = await prisma.RefugeeCamp.update({
               where: { id: 1},
               data: {foodLevel : 10},
-
-
             })
             io.emit('dataBaseUpdated',updateFood)
             console.log("Update food was send")
