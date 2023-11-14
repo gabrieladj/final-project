@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import Test from '../src/app/test/page';
 import '@testing-library/jest-dom';
 import { getCampStats } from '@/lib/stats';
+import { getCampCapacity } from '@/lib/utility';
 
  
 describe('Home', () => {
@@ -42,3 +43,10 @@ describe('Home', () => {
 //     });
 //   });
 // });
+
+describe('getCampCapacity', () => {
+  it('should the capacity based on ratio defined in the function', async () => {
+    const capacity = getCampCapacity(10, 10, 10, 10);
+    expect(capacity).toBe(10);
+  });
+});

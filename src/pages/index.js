@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useRef, useEffect } from 'react';
-import styles from './globals.css';
+import './global.css';
+import styles from './main-page.css';
 import Head from 'next/head';
 import useSWR from 'swr'
 import io from "socket.io-client"
@@ -52,7 +53,7 @@ export default function Main(props) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const imagesRef = useRef(null);
   
-  const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
   // Function to toggle the panel's open/close state
   const togglePanel = () => {
     setIsPanelOpen(!isPanelOpen);
@@ -336,14 +337,22 @@ export default function Main(props) {
     function resizeCanvas() {
       const pixelRatio = 1; // window.devicePixelRatio || 1;
       var size = defaultSize;
-      if (window.innerWidth < window.innerHeight) {
-        size = window.innerWidth;
+      // handle resizing if panel is open
+      if (isPanelOpen && window.innerWidth - 300 < window.innerHeight) {
+        size = window.innerWidth - 300;
         canvas.width = size;
         canvas.height = size;
-      } else {
-        size = window.innerHeight;
-        canvas.width = size;
-        canvas.height = size;
+      }
+      else {
+        if (window.innerWidth < window.innerHeight) {
+          size = window.innerWidth;
+          canvas.width = size;
+          canvas.height = size;
+        } else {
+          size = window.innerHeight;
+          canvas.width = size;
+          canvas.height = size;
+        }
       }
       ctx.scale(size / defaultSize, size / defaultSize);
       draw(ctx, campStats, genStats, routeStats);
@@ -406,11 +415,7 @@ export default function Main(props) {
         setIndCampStats(result)
   
         // Handle the result as needed
-      });
-    
-
-
-      
+      });  
     }
 
     socketInitializer();
@@ -448,10 +453,9 @@ export default function Main(props) {
               if (clickLoc.x < node.x + campClickTarget && clickLoc.x > node.x - campClickTarget
                   && clickLoc.y < node.y + campClickTarget && clickLoc.y > node.y - campClickTarget) {
                 console.log ("clicked on camp " + (campName));
-                socket.emit('campClick',(campName));
                 setisRegionSelected(true);
-                setselectedRegion((regionName))
-
+                setselectedRegion((regionName));
+                setIsPanelOpen(true);
               }
             });
           }
@@ -475,10 +479,10 @@ export default function Main(props) {
   }
 
   return (
-    <div className="centered-container">
-      <div id="canvas-container" className={styles.Canvas2D}>
+    <div>
+      <div className={`canvas-container ${isPanelOpen ? 'sidebar' : ''}`}>
         {/* Add a background image as a CSS background */}
-        <div className="CanvasBackground" />
+        <div className="canvas-background" />
         <canvas data-testid="canvas" ref={canvasRef} width={defaultSize} height={defaultSize} />
       </div>
       {/* Side Panel */}
