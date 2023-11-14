@@ -2,19 +2,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Main from '../src/pages/index';
 import Test from '../src/app/test/page';
 import '@testing-library/jest-dom';
-import { getCampStats } from '../src/lib/stats';
-import { it } from 'node:test';
+import { getCampStats } from '@/lib/stats';
+import { getCampCapacity } from '@/lib/utility';
 
-jest.mock('../src/lib/stats', () => ({
-  getCampStats: jest.fn(() => Promise.resolve({
-    // Mock data representing the response from getCampStats
-    selectedRegion: 1,
-    food: 100,
-    healthcare: 90,
-    housing: 80,
-    admin: 70,
-  })),
-}));
 
 describe('Home', () => {
   // it('renders a heading', () => {
@@ -60,3 +50,10 @@ describe('Home', () => {
 //     });
 //   });
 // });
+
+describe('getCampCapacity', () => {
+  it('should the capacity based on ratio defined in the function', async () => {
+    const capacity = getCampCapacity(10, 10, 10, 10);
+    expect(capacity).toBe(10);
+  });
+});
