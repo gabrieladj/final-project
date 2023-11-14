@@ -39,6 +39,9 @@ export default function Main(props) {
   const [IndcampStats, setIndCampStats] = useState(null);
   const [selectedRegion,setselectedRegion] = useState(null)
   const [isRegionSelected,setisRegionSelected] = useState(false)
+  const [activeTab, setActiveTab] = useState('camps');
+  const [showTimer, setShowTimer] = useState(false);
+  const [timer, setTimer] = useState(0);
 
 
   const canvasRef = useRef(null);
@@ -481,15 +484,26 @@ export default function Main(props) {
         <div className="CanvasBackground" />
         <canvas data-testid="canvas" ref={canvasRef} width={defaultSize} height={defaultSize} />
       </div>
+
       {/* Side Panel */}
       <div className={`side-panel ${isPanelOpen ? 'open' : ''}`}>
-        
+      <div className="side-panel-header">
+      <button className={`tab-button ${activeTab === 'camps' ? 'active' : ''}`} onClick={() => setActiveTab('camps')}>
+        Camps</button>
+      <button className={`tab-button ${activeTab === 'refugeeGeneration' ? 'active' : ''}`} onClick={() => setActiveTab('refugeeGeneration')}>
+        Refugee Generation</button>
+      <button className={`tab-button ${activeTab === 'paths' ? 'active' : ''}`} onClick={() => setActiveTab('paths')}>
+        Paths</button>
+      </div>
+
+      {/* Content for "Camps" tab */}
+      {activeTab === 'camps' && (
         <div>
+          <div>
             {campStats && isRegionSelected &&(
             <div>
 
             <h2>ID: </h2>
-                
             <h2>Camp Information</h2>
             <p>ID: {selectedRegion}</p>
             <p>Food: {campStats[selectedRegion].food}</p>
@@ -498,13 +512,15 @@ export default function Main(props) {
             <p>Admin: {campStats[selectedRegion].admin}</p>
             </div>
           )}
-        </div>
-          
+          </div>
+
         {/* Panel content goes here, include drop down */}
-        <label htmlFor="dropdown">Deployable region: </label>
-        <select id="dropdown" onChange={(event) => {
-              setMessage(event.target.value)
-            }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <label htmlFor="dropdown" style={{ whiteSpace: 'nowrap', marginRight: '8px' }}>
+          Deployable region: </label>
+          <select id="dropdown" onChange={(event) => {
+            setMessage(event.target.value)
+          }}>
           <option value="1">Region 1</option>
           <option value="4">Region 4</option>
           <option value="6">Region 6</option>
@@ -513,8 +529,16 @@ export default function Main(props) {
           <option value="11">Region 11</option>
         </select>
         <br></br><br></br>
-
+        </div>
         <div>
+        <label htmlFor="fname">Refugees: </label>
+          <input 
+            placeholder='Enter refugee level..'
+            onChange={(event) => {
+              setMessage(event.target.value)
+            }}
+          />
+          <br></br><br></br>
         <label htmlFor="fname">Food: </label>
           <input 
             placeholder='Enter food level..'
@@ -545,10 +569,34 @@ export default function Main(props) {
             onChange={(event) => {
               setMessage(event.target.value)
             }}/>
-          <button className ="bordered-button" onClick={sendMessage}>Update</button>
+          <button className ="borderedd-button" onClick={sendMessage}>Update</button>
+          <button className ="borderedd-button" onClick={sendMessage}>Revert</button>
           <h1>{messageRecieve}</h1>
+          </div>
         </div>
-        <button className ="bordered-button" onClick={togglePanel} style={{ position: 'fixed', bottom: 0, right: 0 }}>Toggle Panel</button>
+      )}
+
+    {/* Content for "Refugee Gen" tab */}
+    {activeTab === 'refugeeGeneration' && (
+        <div>
+          <div>
+          <button className ="borderedd-button" onClick={sendMessage}>Update</button>
+          <button className ="borderedd-button" onClick={sendMessage}>Revert</button>
+        </div>
+      </div>
+      )}
+
+    {/* Content for "Refugee Gen" tab */}
+    {activeTab === 'paths' && (
+        <div>
+          <div>
+          <button className ="borderedd-button" onClick={sendMessage}>Update</button>
+          <button className ="borderedd-button" onClick={sendMessage}>Revert</button>
+        </div>
+      </div>
+      )}
+
+      <button className ="bordered-button" onClick={togglePanel} style={{ position: 'fixed', bottom: 0, right: 0 }}>Toggle Panel</button>
       </div>
       {/* "Open Panel" button outside of the side panel */}
       <div className={`side-panel ${isPanelOpen ? 'closed' : ''}`}>
