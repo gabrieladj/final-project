@@ -38,6 +38,26 @@ const SocketHandler = (req, res) => {
             console.error(error)
           }
         })
+
+        socket.on('updateCampStats',async(data, region) => {
+          console.log('receieved in back end')
+          console.log('data: ')
+          console.log(data)
+          //const{selectedRegion, food, housing, healthcare,} = data        
+          await prisma.DeployableRegion.update({
+            where:{
+              id: parseInt(region),
+            },
+            data: {
+              food: parseInt(data.food),
+              housing: parseInt(data.housing),
+              healthcare: parseInt(data.healthcare),
+            }
+          })
+          // Broadcast the updated data to all connected clients
+          //io.emit('campStatsUpdated', data, region);
+          //console.log('Database updated')
+        })
     })
   }
   res.end()

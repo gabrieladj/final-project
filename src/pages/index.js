@@ -1,11 +1,11 @@
-"use client"
-import React, { useState, useRef, useEffect } from 'react';
-import './global.css';
-import styles from './main-page.css';
-import Head from 'next/head';
-import useSWR from 'swr'
-import io from "socket.io-client"
-import { getCampCapacity } from "../lib/utility"
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import "./global.css";
+import styles from "./main-page.css";
+import Head from "next/head";
+import useSWR from "swr";
+import io from "socket.io-client";
+import { getCampCapacity } from "../lib/utility";
 let socket;
 
 async function fetcher(url) {
@@ -19,13 +19,13 @@ function loadImages(sources, callback) {
   var loadedImages = 0;
   var numImages = 0;
   // get num of sources
-  for(var src in sources) {
+  for (var src in sources) {
     numImages++;
   }
-  for(var src in sources) {
+  for (var src in sources) {
     newImages[src] = new Image();
-    newImages[src].onload = function() {
-      if(++loadedImages >= numImages) {
+    newImages[src].onload = function () {
+      if (++loadedImages >= numImages) {
         callback(newImages);
       }
     };
@@ -34,66 +34,76 @@ function loadImages(sources, callback) {
 }
 
 export default function Main(props) {
-
-  const [message,setMessage] = useState('')
-  const [messageRecieve,setMessageRecieve]= useState("")
+  const [message, setMessage] = useState("");
+  const [messageRecieve, setMessageRecieve] = useState("");
   const [IndcampStats, setIndCampStats] = useState(null);
-  const [selectedRegion,setselectedRegion] = useState(null)
-  const [isRegionSelected,setisRegionSelected] = useState(false)
-  const [activeTab, setActiveTab] = useState('camps');
+  const [selectedRegion, setselectedRegion] = useState(null);
+  const [isRegionSelected, setisRegionSelected] = useState(false);
+  const [activeTab, setActiveTab] = useState("camps");
   const [showTimer, setShowTimer] = useState(false);
   const [timer, setTimer] = useState(0);
 
+  const [selectCampStats, setSelectCampStats] = useState(null);
+  const selectedCampStatsRef = useRef(null);
 
   const canvasRef = useRef(null);
   const defaultSize = 720;
   var drawCampNum = false,
-      drawGenNum = false,
-      drawPathNum = false;
+    drawGenNum = false,
+    drawPathNum = false;
   const genRadius = 9;
   const campSize = 26; // size of blue square
   const campDangerSize = 35; // size of red box around the blue square
   const [imgLoaded, setImgLoaded] = useState(false);
   const imagesRef = useRef(null);
-  
+
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   // Function to toggle the panel's open/close state
   const togglePanel = () => {
     setIsPanelOpen(!isPanelOpen);
   };
-  const dataRef = useRef(null)
-  const { data, error } = useSWR('/map-nodes.json', fetcher)
+  const dataRef = useRef(null);
+  const { data, error } = useSWR("/map-nodes.json", fetcher);
   const [campStats, setCampStats] = useState(null);
   const [routeStats, setRouteStats] = useState(null);
   const [genStats, setGenStats] = useState(null);
 
-
-  if (error) { 
+  if (error) {
     console.log("error loading json");
   }
-  if (!data) console.log('loading map data...');
+  if (!data) console.log("loading map data...");
 
   function drawCampStats(ctx, position, stats) {
     const imgSize = 20;
     const ySpacing = 3;
-    const margin   = {'x': 4,
-                      'y': 4};
-    const imagePos = {'x': position.x+margin.x,
-                      'y': position.y+margin.y};
-    const textPos  = {'x': position.x + margin.x + imgSize + 5,
-                      'y': position.y + margin.y + (imgSize/2) + 4};
-    const boxHeight = ((imgSize * 5) + (margin.y * 2) + (ySpacing * 4));
+    const margin = { x: 4, y: 4 };
+    const imagePos = { x: position.x + margin.x, y: position.y + margin.y };
+    const textPos = {
+      x: position.x + margin.x + imgSize + 5,
+      y: position.y + margin.y + imgSize / 2 + 4,
+    };
+    const boxHeight = imgSize * 5 + margin.y * 2 + ySpacing * 4;
     const boxWidth = imgSize + 35;
     const inset = 1;
     ctx.fillStyle = "black";
     ctx.fillRect(position.x, position.y, boxWidth, boxHeight);
     ctx.fillStyle = "#efefef";
-    ctx.fillRect(position.x + inset, position.y + inset, boxWidth - inset * 2, boxHeight - inset * 2);
-    
+    ctx.fillRect(
+      position.x + inset,
+      position.y + inset,
+      boxWidth - inset * 2,
+      boxHeight - inset * 2
+    );
+
     // drawing icons
-    if (imagesRef.current != null ) {
-      const imgArray = [imagesRef.current.refugee, imagesRef.current.food,
-                      imagesRef.current.health, imagesRef.current.house, imagesRef.current.admin];
+    if (imagesRef.current != null) {
+      const imgArray = [
+        imagesRef.current.refugee,
+        imagesRef.current.food,
+        imagesRef.current.health,
+        imagesRef.current.house,
+        imagesRef.current.admin,
+      ];
       imgArray.forEach((img) => {
         ctx.drawImage(img, imagePos.x, imagePos.y, imgSize, imgSize);
         imagePos.y += imgSize + ySpacing;
@@ -103,7 +113,13 @@ export default function Main(props) {
     // drawing stats text
     ctx.font = "12px serif";
     ctx.fillStyle = "black";
-    const statsArray = [stats.refugeesPresent, stats.food, stats.housing, stats.healthcare,stats.admin];
+    const statsArray = [
+      stats.refugeesPresent,
+      stats.food,
+      stats.housing,
+      stats.healthcare,
+      stats.admin,
+    ];
     statsArray.forEach((stat) => {
       ctx.fillText(stat, textPos.x, textPos.y);
       textPos.y += imgSize + ySpacing;
@@ -111,29 +127,35 @@ export default function Main(props) {
   }
 
   function drawGenStats(ctx, position, stats) {
-    
     const imgSize = 20;
     const ySpacing = 3;
-    const margin   = {'x': 4,
-                      'y': 4};
-    const imagePos = {'x': position.x+margin.x,
-                      'y': position.y+margin.y};
-    const textPos  = {'x': position.x + margin.x + imgSize + 5,
-                      'y': position.y + margin.y + (imgSize/2) + 4};
-    const boxHeight = ((imgSize * 3) + (margin.y * 2) + (ySpacing * 2));
+    const margin = { x: 4, y: 4 };
+    const imagePos = { x: position.x + margin.x, y: position.y + margin.y };
+    const textPos = {
+      x: position.x + margin.x + imgSize + 5,
+      y: position.y + margin.y + imgSize / 2 + 4,
+    };
+    const boxHeight = imgSize * 3 + margin.y * 2 + ySpacing * 2;
     const boxWidth = imgSize + 35;
     const inset = 1;
 
     ctx.fillStyle = "black";
     ctx.fillRect(position.x, position.y, boxWidth, boxHeight);
     ctx.fillStyle = "#efefef";
-    ctx.fillRect(position.x + inset, position.y + inset, 
-                 boxWidth - inset * 2, boxHeight - inset * 2);
-    
+    ctx.fillRect(
+      position.x + inset,
+      position.y + inset,
+      boxWidth - inset * 2,
+      boxHeight - inset * 2
+    );
+
     // drawing icons
-    if (imagesRef.current != null ) {
-      const imgArray = [imagesRef.current.food, imagesRef.current.health, 
-                        imagesRef.current.admin];
+    if (imagesRef.current != null) {
+      const imgArray = [
+        imagesRef.current.food,
+        imagesRef.current.health,
+        imagesRef.current.admin,
+      ];
       imgArray.forEach((img) => {
         ctx.drawImage(img, imagePos.x, imagePos.y, imgSize, imgSize);
         imagePos.y += imgSize + ySpacing;
@@ -155,108 +177,140 @@ export default function Main(props) {
     if (!data || !campStats || !routeStats || !genStats) {
       return;
     }
-    
+
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
     ctx.font = "12px serif";
 
     // Drawing paths (do this first so nodes are rendered on top)
     ctx.lineWidth = 5;
-    
+
     ctx.beginPath();
-    Object.keys(data['paths']).map((path, i) => {
-      ctx.strokeStyle = '#e8bd20';
+    Object.keys(data["paths"]).map((path, i) => {
+      ctx.strokeStyle = "#e8bd20";
       // check if we have data from the database for this path
       if (routeStats != null && path in routeStats) {
         if (!routeStats[path].isOpen) {
-          ctx.strokeStyle = 'red';
+          ctx.strokeStyle = "red";
         }
       }
 
-      const node = data['paths'][path];
-      const startNode = data['paths'][path].start;
-      const endNode = data['paths'][path].end;
-      var startCoord = {x: 0, y: 0};
-      var endCoord = {x: 0, y: 0};
-      
+      const node = data["paths"][path];
+      const startNode = data["paths"][path].start;
+      const endNode = data["paths"][path].end;
+      var startCoord = { x: 0, y: 0 };
+      var endCoord = { x: 0, y: 0 };
+
       // get the x and y of the camp or gen point
       // start node is camp
       if (startNode.type === "camp") {
-        startCoord.x = data['regions'][startNode.region]['camps'][startNode.node].x;
-        startCoord.y = data['regions'][startNode.region]['camps'][startNode.node].y;
+        startCoord.x =
+          data["regions"][startNode.region]["camps"][startNode.node].x;
+        startCoord.y =
+          data["regions"][startNode.region]["camps"][startNode.node].y;
       }
       // start node is generation point
       else if (startNode.type === "gen") {
-        startCoord.x = data['regions'][startNode.region]['gens'][startNode.node].x;
-        startCoord.y = data['regions'][startNode.region]['gens'][startNode.node].y;
+        startCoord.x =
+          data["regions"][startNode.region]["gens"][startNode.node].x;
+        startCoord.y =
+          data["regions"][startNode.region]["gens"][startNode.node].y;
       }
       // end node is camp
       if (endNode.type === "camp") {
-        endCoord.x = data['regions'][endNode.region]['camps'][endNode.node].x;
-        endCoord.y = data['regions'][endNode.region]['camps'][endNode.node].y;
+        endCoord.x = data["regions"][endNode.region]["camps"][endNode.node].x;
+        endCoord.y = data["regions"][endNode.region]["camps"][endNode.node].y;
       }
       // end node is generation point
       else if (endNode.type === "gen") {
-        endCoord.x = data['regions'][endNode.region]['gens'][endNode.node].x;
-        endCoord.y = data['regions'][endNode.region]['gens'][endNode.node].y;
+        endCoord.x = data["regions"][endNode.region]["gens"][endNode.node].x;
+        endCoord.y = data["regions"][endNode.region]["gens"][endNode.node].y;
       }
 
       // ready to draw
       ctx.beginPath();
       ctx.moveTo(startCoord.x, startCoord.y);
       // if control points exist, draw a bezier (curved) line
-      if (data['paths'][path]['cp1'] != null && data['paths'][path]['cp2'] != null)
-      {
-        const cp1 = data['paths'][path]['cp1'];
-        const cp2 = data['paths'][path]['cp2'];
-        ctx.bezierCurveTo(startCoord.x+cp1.x, startCoord.y+cp1.y, 
-          endCoord.x+cp2.x, endCoord.y+cp2.y, endCoord.x, endCoord.y);
+      if (
+        data["paths"][path]["cp1"] != null &&
+        data["paths"][path]["cp2"] != null
+      ) {
+        const cp1 = data["paths"][path]["cp1"];
+        const cp2 = data["paths"][path]["cp2"];
+        ctx.bezierCurveTo(
+          startCoord.x + cp1.x,
+          startCoord.y + cp1.y,
+          endCoord.x + cp2.x,
+          endCoord.y + cp2.y,
+          endCoord.x,
+          endCoord.y
+        );
         ctx.stroke(); // Render the path
-      }
-      else // no control points, straight line from a to b
-      {
+      } // no control points, straight line from a to b
+      else {
         ctx.lineTo(endCoord.x, endCoord.y);
         ctx.stroke(); // Render the path
       }
       // for debugging
       if (drawPathNum) {
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = "black";
         ctx.font = "12px serif";
-        ctx.fillText((i+1), (startCoord.x+endCoord.x)/2, (startCoord.y+endCoord.y)/2);
+        ctx.fillText(
+          i + 1,
+          (startCoord.x + endCoord.x) / 2,
+          (startCoord.y + endCoord.y) / 2
+        );
       }
     });
 
     // loop through regions
-    Object.keys(data['regions']).map((regionNum) => {
-      const region = data['regions'][regionNum];
+    Object.keys(data["regions"]).map((regionNum) => {
+      const region = data["regions"][regionNum];
       // how much to offset the inner part of the square
-      const bevelOffset = Math.ceil(campSize * .1); // 10%
+      const bevelOffset = Math.ceil(campSize * 0.1); // 10%
       // how much to offset the outer part of the square (danger indicator)
-      const dangerOffset = Math.ceil(campSize * .1); // 25%
+      const dangerOffset = Math.ceil(campSize * 0.1); // 25%
       // Drawing camps (blue squares)
-      if ('camps' in region) {
+      if ("camps" in region) {
         // get camp capacity based on the stats
-        const campCapacity = getCampCapacity(campStats[regionNum].food, campStats[regionNum].healthcare,
-                                             campStats[regionNum].housing, campStats[regionNum].admin);
+        const campCapacity = getCampCapacity(
+          campStats[regionNum].food,
+          campStats[regionNum].healthcare,
+          campStats[regionNum].housing,
+          campStats[regionNum].admin
+        );
         // loop through all the camps in the region
-        Object.keys(region['camps']).map((camp) => {
-          const campNode = region['camps'][camp];
+        Object.keys(region["camps"]).map((camp) => {
+          const campNode = region["camps"][camp];
 
           // is this camp in danger?
           if (campCapacity < campStats[regionNum].refugeesPresent) {
             // draw a red box around the blue square
-            ctx.fillStyle = 'red';
-            ctx.fillRect((campNode.x - campSize / 2) - dangerOffset, (campNode.y - campSize / 2) - dangerOffset,
-                          campSize + dangerOffset * 2, campSize + dangerOffset * 2);
+            ctx.fillStyle = "red";
+            ctx.fillRect(
+              campNode.x - campSize / 2 - dangerOffset,
+              campNode.y - campSize / 2 - dangerOffset,
+              campSize + dangerOffset * 2,
+              campSize + dangerOffset * 2
+            );
           }
           // draw outer square
-          ctx.fillStyle = '#2e35c0'; // blue
-          ctx.fillRect(campNode.x - campSize / 2, campNode.y - campSize / 2, campSize, campSize);
+          ctx.fillStyle = "#2e35c0"; // blue
+          ctx.fillRect(
+            campNode.x - campSize / 2,
+            campNode.y - campSize / 2,
+            campSize,
+            campSize
+          );
           // draw inner square
-          ctx.fillStyle = '#3c66ba'; // light blue
-          ctx.fillRect((campNode.x - campSize / 2) + bevelOffset, (campNode.y - campSize / 2) + bevelOffset,
-                        campSize - bevelOffset*2, campSize - bevelOffset*2);
-          
+          ctx.fillStyle = "#3c66ba"; // light blue
+          ctx.fillRect(
+            campNode.x - campSize / 2 + bevelOffset,
+            campNode.y - campSize / 2 + bevelOffset,
+            campSize - bevelOffset * 2,
+            campSize - bevelOffset * 2
+          );
+
           // if (drawCampNum) {
           //   ctx.fillStyle = 'white';
           //   ctx.font = "12px serif";
@@ -264,79 +318,84 @@ export default function Main(props) {
           //   ctx.fillStyle = '#0000CC';
           // }
           // draw capacity on the camp
-          
-          ctx.fillStyle = 'white';
+
+          ctx.fillStyle = "white";
           ctx.font = "12px serif";
           const textWidth = ctx.measureText(campCapacity).width;
-          ctx.fillText(campCapacity, campNode.x - textWidth / 2, campNode.y + 4);
-          ctx.fillStyle = '#0000CC';
+          ctx.fillText(
+            campCapacity,
+            campNode.x - textWidth / 2,
+            campNode.y + 4
+          );
+          ctx.fillStyle = "#0000CC";
         });
       }
 
       // Drawing generation points (red circles)
-      if ('gens' in region) {
-        const circleColor = '#FF0000';
-        Object.keys(region['gens']).map((gen_point) => {
-          const genNode = region['gens'][gen_point];
+      if ("gens" in region) {
+        const circleColor = "#FF0000";
+        Object.keys(region["gens"]).map((gen_point) => {
+          const genNode = region["gens"][gen_point];
           ctx.beginPath();
           ctx.arc(genNode.x, genNode.y, genRadius, 0, 2 * Math.PI);
           ctx.fillStyle = circleColor;
           ctx.fill();
-          ctx.fillStyle = 'white';
+          ctx.fillStyle = "white";
           ctx.font = "12px serif";
           const textWidth = ctx.measureText(genNode.letter).width;
-          ctx.fillText(genNode.letter, genNode.x-textWidth/2, genNode.y+4);
+          ctx.fillText(
+            genNode.letter,
+            genNode.x - textWidth / 2,
+            genNode.y + 4
+          );
           ctx.fillStyle = circleColor;
 
           // get stats for this region from campStats
           // camp stats should have data from the database about each region
           var stats = genStats[gen_point];
-          console.log("GEN NODE: ")
+          console.log("GEN NODE: ");
           console.log(genNode);
           const statsPostion = genNode.statsPos;
           drawGenStats(ctx, statsPostion, stats);
-          
+
           if (drawGenNum) {
-            ctx.fillStyle = 'Black';
-            ctx.fillText((gen_point), genNode.x+15, genNode.y+15);
+            ctx.fillStyle = "Black";
+            ctx.fillText(gen_point, genNode.x + 15, genNode.y + 15);
             ctx.fillStyle = circleColor;
           }
         });
       }
-      // draw region label 
-      if ('labelPos' in region) { 
-        ctx.font = "16px serif"; 
-        ctx.fillStyle = 'green';
-        ctx.fillText(regionNum, region['labelPos'].x, region['labelPos'].y);
-        ctx.fillStyle = '#0000CC';
+      // draw region label
+      if ("labelPos" in region) {
+        ctx.font = "16px serif";
+        ctx.fillStyle = "green";
+        ctx.fillText(regionNum, region["labelPos"].x, region["labelPos"].y);
+        ctx.fillStyle = "#0000CC";
       }
       // camp stats
-      if ('campsStatsPos' in region && campStats 
-          && campStats[regionNum] != null)
-      { 
+      if (
+        "campsStatsPos" in region &&
+        campStats &&
+        campStats[regionNum] != null
+      ) {
         // get stats for this region from campStats
         // camp stats should have data from the database about each region
         var stats = campStats[regionNum];
-        const statsPostion = region['campsStatsPos'];
+        const statsPostion = region["campsStatsPos"];
         drawCampStats(ctx, statsPostion, stats);
       }
-      
     });
   }
 
-  function handleInput(clickLoc, data, scale) {
-    
-  }
+  function handleInput(clickLoc, data, scale) {}
 
   // initial useEffect function, will be called on page load
   useEffect(() => {
     console.log("use effect called");
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    
+    const ctx = canvas.getContext("2d");
 
-    window.addEventListener('resize', resizeCanvas, false);
+    window.addEventListener("resize", resizeCanvas, false);
     function resizeCanvas() {
       const pixelRatio = 1; // window.devicePixelRatio || 1;
       var size = defaultSize;
@@ -345,8 +404,7 @@ export default function Main(props) {
         size = window.innerWidth - 300;
         canvas.width = size;
         canvas.height = size;
-      }
-      else {
+      } else {
         if (window.innerWidth < window.innerHeight) {
           size = window.innerWidth;
           canvas.width = size;
@@ -363,14 +421,14 @@ export default function Main(props) {
 
     // list of all the images we need to load
     var sources = {
-      refugee: '/refugee.png',
-      food: '/food.png',
-      admin: '/admin.png',
-      health: '/health.png',
-      house: '/house.png'
+      refugee: "/refugee.png",
+      food: "/food.png",
+      admin: "/admin.png",
+      health: "/health.png",
+      house: "/house.png",
     };
 
-    loadImages(sources, function(loadedImages) {
+    loadImages(sources, function (loadedImages) {
       imagesRef.current = loadedImages;
       setImgLoaded(true);
       draw(ctx, campStats, genStats, routeStats);
@@ -382,44 +440,47 @@ export default function Main(props) {
   // effect for initializing socket. empty dependancy array to make it run only once
   useEffect(() => {
     const socketInitializer = async () => {
-      await fetch('/api/server');
+      await fetch("/api/server");
       socket = io();
-  
-      socket.on('connect', () => {
-        console.log('connected');
-      });
-  
-      socket.on('receive_message',(data) => {
-        setMessageRecieve(data.message)
-        alert(data.message)
-        console.log("message was sent")
+
+      socket.on("connect", () => {
+        console.log("connected");
       });
 
-      socket.on('camp_stats',(stats) => {
-        console.log('Received camp stats on client: ');
+      socket.on("receive_message", (data) => {
+        setMessageRecieve(data.message);
+        alert(data.message);
+        console.log("message was sent");
+      });
+
+      socket.on("camp_stats", (stats) => {
+        console.log("Received camp stats on client: ");
         console.log(stats);
-        setCampStats (stats);
+        setCampStats(stats);
       });
 
-      socket.on('routes',(routes) => {
-        console.log('Received routes on client: ');
+      socket.on("routes", (routes) => {
+        console.log("Received routes on client: ");
         console.log(routes);
-        setRouteStats(routes)
+        setRouteStats(routes);
       });
-      socket.on('gens', (gens) => {
-        console.log('Received gen points on client: ');
+      socket.on("gens", (gens) => {
+        console.log("Received gen points on client: ");
         console.log(gens);
         setGenStats(gens);
       });
 
-      socket.on('campResult', (result) => {
-        console.log('Received camp:');
+      socket.on("campResult", (result) => {
+        console.log("Received camp:");
         console.log(result);
-        setIndCampStats(result)
-  
+        setIndCampStats(result);
+
         // Handle the result as needed
-      });  
-    }
+      });
+      socket.on("campsStatsUpdated", (updatedData) => {
+        console.log("Camp stats updated:", updatedData);
+      });
+    };
 
     socketInitializer();
     return () => {
@@ -433,177 +494,246 @@ export default function Main(props) {
     if (data) {
       // Store the data object in the ref
       dataRef.current = data;
+      selectedCampStatsRef.current = campStats;
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       // Add event listener for `click` events.
-      canvas.addEventListener('click', function(event) {
-        // get click position relative to scale of canvas
-        const scale = defaultSize / canvas.height;
-        const canvasX = Math.floor(event.offsetX * scale);
-        const canvasY = Math.floor(event.offsetY * scale);
-        var clickLoc = {'x': canvasX, 'y': canvasY};
-        const data = dataRef.current;
-        //handleInput(clickLoc, data, scale)
-        if (!data) return;
-        const campClickTarget = campSize * scale / 2;
-        console.log(JSON.stringify(clickLoc));
-        Object.keys(data['regions']).map((regionName) => {
-          const region = data['regions'][regionName];
-          if ('camps' in region) {
-            Object.keys(region['camps']).map((campName) => {
-              var node = region['camps'][campName];
-              
-              if (clickLoc.x < node.x + campClickTarget && clickLoc.x > node.x - campClickTarget
-                  && clickLoc.y < node.y + campClickTarget && clickLoc.y > node.y - campClickTarget) {
-                console.log ("clicked on camp " + (campName));
-                setisRegionSelected(true);
-                setselectedRegion((regionName));
-                setIsPanelOpen(true);
-              }
-            });
-          }
-        });
-      }, false);
+      canvas.addEventListener(
+        "click",
+        function (event) {
+          // get click position relative to scale of canvas
+          const scale = defaultSize / canvas.height;
+          const canvasX = Math.floor(event.offsetX * scale);
+          const canvasY = Math.floor(event.offsetY * scale);
+          var clickLoc = { x: canvasX, y: canvasY };
+          const data = dataRef.current;
+          //handleInput(clickLoc, data, scale)
+          if (!data) return;
+          const campClickTarget = (campSize * scale) / 2;
+          console.log(JSON.stringify(clickLoc));
+          Object.keys(data["regions"]).map((regionName) => {
+            const region = data["regions"][regionName];
+            if ("camps" in region) {
+              Object.keys(region["camps"]).map((campName) => {
+                var node = region["camps"][campName];
+
+                if (
+                  clickLoc.x < node.x + campClickTarget &&
+                  clickLoc.x > node.x - campClickTarget &&
+                  clickLoc.y < node.y + campClickTarget &&
+                  clickLoc.y > node.y - campClickTarget
+                ) {
+                  console.log("clicked on camp " + campName);
+                  setisRegionSelected(true);
+                  setselectedRegion(regionName);
+                  setSelectCampStats(selectedCampStatsRef.current[regionName]);
+                  console.log(selectedCampStatsRef.current[regionName]);
+                  setIsPanelOpen(true);
+                }
+              });
+            }
+          });
+        },
+        false
+      );
       draw(ctx, campStats, genStats, routeStats);
     }
-  }, [data, campStats] );
+  }, [data, campStats]);
 
-  const sendMessage = () =>{
-    socket.emit("send_message" , {
-      message : message
-      
-    });
-    socket.emit("updateLevelFood",{
-      foodLevel : ""
-    })
-    console.log('sending a message');
+  const sendUpdate = () => {
+    const updateData = {
+      selectedRegion: selectedRegion,
+      food: selectCampStats.food,
+      housing: selectCampStats.housing,
+      healthcare: selectCampStats.healthcare,
+    };
 
-    
-  }
+    socket.emit("updateCampStats", selectCampStats, selectedRegion);
+    console.log("Update was sent");
+    console.log(updateData);
+    //setMessageRecieve('Update sent successfully')
+  };
 
   return (
     <div>
-      <div className={`canvas-container ${isPanelOpen ? 'sidebar' : ''}`}>
+      <div className={`canvas-container ${isPanelOpen ? "sidebar" : ""}`}>
         {/* Add a background image as a CSS background */}
         <div className="canvas-background" />
-        <canvas data-testid="canvas" ref={canvasRef} width={defaultSize} height={defaultSize} />
+        <canvas
+          data-testid="canvas"
+          ref={canvasRef}
+          width={defaultSize}
+          height={defaultSize}
+        />
       </div>
 
       {/* Side Panel */}
-      <div className={`side-panel ${isPanelOpen ? 'open' : ''}`}>
-      <div className="side-panel-header">
-      <button className={`tab-button ${activeTab === 'camps' ? 'active' : ''}`} onClick={() => setActiveTab('camps')}>
-        Camps</button>
-      <button className={`tab-button ${activeTab === 'refugeeGeneration' ? 'active' : ''}`} onClick={() => setActiveTab('refugeeGeneration')}>
-        Refugee Generation</button>
-      <button className={`tab-button ${activeTab === 'paths' ? 'active' : ''}`} onClick={() => setActiveTab('paths')}>
-        Paths</button>
-      </div>
-
-      {/* Content for "Camps" tab */}
-      {activeTab === 'camps' && (
-        <div>
-          <div>
-            {campStats && isRegionSelected &&(
+      <div className={`side-panel ${isPanelOpen ? "open" : ""}`}>
+        {/* Panel content goes here, include drop down */}
+        
+        <div className="side-panel-header">
+          <button
+            className={`tab-button ${activeTab === "camps" ? "active" : ""}`}
+            onClick={() => setActiveTab("camps")}
+          >
+            Camps
+          </button>
+          <button
+            className={`tab-button ${
+              activeTab === "refugeeGeneration" ? "active" : ""
+            }`}
+            onClick={() => setActiveTab("refugeeGeneration")}
+          >
+            Refugee Generation
+          </button>
+          <button
+            className={`tab-button ${activeTab === "paths" ? "active" : ""}`}
+            onClick={() => setActiveTab("paths")}
+          >
+            Paths
+          </button>
+        </div>
+        <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+        >
+          {/* Content for "Camps" tab */}
+          {activeTab === "camps" && (
             <div>
+              {campStats && isRegionSelected && (
+                <div>
+                  <label
+                    htmlFor="dropdown"
+                  >
+                    Region
+                  </label>
+                  <select
+                    id="dropdown"
+                    onChange={(event) => {
+                      setMessage(event.target.value);
+                    }}
+                  >
+                    <option value="1">Region 1</option>
+                    <option value="4">Region 4</option>
+                    <option value="6">Region 6</option>
+                    <option value="7">Region 7</option>
+                    <option value="8">Region 8</option>
+                    <option value="11">Region 11</option>
+                  </select>
+                  <br />
+                  <br />
+                  <label htmlFor="fname">Food: </label>
+                  <input
+                    type="number"
+                    placeholder="Enter food level.."
+                    value={selectCampStats.food}
+                    onChange={(event) => {
+                      setSelectCampStats((prevStats) => ({
+                        ...prevStats,
+                        food: event.target.value,
+                      }));
+                    }}
+                  />
+                  <br />
+                  <br />
+                  <label htmlFor="fname">Housing: </label>
+                  <input
+                    type="number"
+                    placeholder="Enter housing level.."
+                    value={selectCampStats.housing}
+                    onChange={(event) => {
+                      setSelectCampStats((prevStats) => ({
+                        ...prevStats,
+                        housing: event.target.value,
+                      }));
+                    }}
+                  />
+                  <br />
+                  <br />
+                  <label htmlFor="fname">Health: </label>
+                  <input
+                    type="number"
+                    placeholder="Enter health level.."
+                    value={selectCampStats.healthcare}
+                    onChange={(event) => {
+                      setSelectCampStats((prevStats) => ({
+                        ...prevStats,
+                        healthcare: event.target.value,
+                      }));
+                    }}
+                  />
+                  <br />
+                  <br />
+                  <label htmlFor="fname">Admin: </label>
+                  <input
+                    type="number"
+                    placeholder="Enter admin level.."
+                    value={selectCampStats.admin}
+                    onChange={(event) => {
+                      setSelectCampStats((prevStats) => ({
+                        ...prevStats,
+                        admin: event.target.value,
+                      }));
+                    }}
+                  />
 
-            <h2>ID: </h2>
-            <h2>Camp Information</h2>
-            <p>ID: {selectedRegion}</p>
-            <p>Food: {campStats[selectedRegion].food}</p>
-            <p>HealthCare: {campStats[selectedRegion].healthcare}</p>
-            <p>Housing: {campStats[selectedRegion].housing}</p>
-            <p>Admin: {campStats[selectedRegion].admin}</p>
+                  <h1>{messageRecieve}</h1>
+                </div>
+              )}
+
+              
+              <button className="borderedd-button" onClick={sendUpdate}>
+                Update
+              </button>
+              <button className="borderedd-button" onClick={sendUpdate}>
+                Revert
+              </button>
+              <h1>{messageRecieve}</h1>
             </div>
           )}
-          </div>
 
-        {/* Panel content goes here, include drop down */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <label htmlFor="dropdown" style={{ whiteSpace: 'nowrap', marginRight: '8px' }}>
-          Deployable region: </label>
-          <select id="dropdown" onChange={(event) => {
-            setMessage(event.target.value)
-          }}>
-          <option value="1">Region 1</option>
-          <option value="4">Region 4</option>
-          <option value="6">Region 6</option>
-          <option value="7">Region 7</option>
-          <option value="8">Region 8</option>
-          <option value="11">Region 11</option>
-        </select>
-        <br></br><br></br>
-        </div>
-        <div>
-        <label htmlFor="fname">Refugees: </label>
-          <input 
-            placeholder='Enter refugee level..'
-            onChange={(event) => {
-              setMessage(event.target.value)
-            }}
-          />
-          <br></br><br></br>
-        <label htmlFor="fname">Food: </label>
-          <input 
-            placeholder='Enter food level..'
-            onChange={(event) => {
-              setMessage(event.target.value)
-            }}
-          />
-          <br></br><br></br>
-          <label htmlFor="fname">Housing: </label>
-          <input 
-            placeholder='Enter housing level..'
-            onChange={(event) => {
-              setMessage(event.target.value)
-            }}
-          />
-          <br></br><br></br>
-          <label htmlFor="fname">Health: </label>
-          <input 
-            placeholder='Enter health level..'
-            onChange={(event) => {
-              setMessage(event.target.value)
-            }}
-          />
-          <br></br><br></br>
-          <label htmlFor="fname">Admin: </label>
-          <input 
-            placeholder='Enter admin level..'
-            onChange={(event) => {
-              setMessage(event.target.value)
-            }}/>
-          <button className ="borderedd-button" onClick={sendMessage}>Update</button>
-          <button className ="borderedd-button" onClick={sendMessage}>Revert</button>
-          <h1>{messageRecieve}</h1>
-          </div>
-        </div>
-      )}
+          {/* Content for "Refugee Gen" tab */}
+          {activeTab === "refugeeGeneration" && (
+            <div>
+              <div>
+                <button className="borderedd-button" onClick={sendUpdate}>
+                  Update
+                </button>
+                <button className="borderedd-button" onClick={sendUpdate}>
+                  Revert
+                </button>
+              </div>
+            </div>
+          )}
 
-    {/* Content for "Refugee Gen" tab */}
-    {activeTab === 'refugeeGeneration' && (
-        <div>
-          <div>
-          <button className ="borderedd-button" onClick={sendMessage}>Update</button>
-          <button className ="borderedd-button" onClick={sendMessage}>Revert</button>
-        </div>
-      </div>
-      )}
+          {/* Content for "Refugee Gen" tab */}
+          {activeTab === "paths" && (
+            <div>
+              <div>
+                <button className="borderedd-button" onClick={sendUpdate}>
+                  Update
+                </button>
+                <button className="borderedd-button" onClick={sendUpdate}>
+                  Revert
+                </button>
+              </div>
+            </div>
+          )}
 
-    {/* Content for "Refugee Gen" tab */}
-    {activeTab === 'paths' && (
-        <div>
-          <div>
-          <button className ="borderedd-button" onClick={sendMessage}>Update</button>
-          <button className ="borderedd-button" onClick={sendMessage}>Revert</button>
+          <button
+            className="bordered-button"
+            onClick={togglePanel}
+            style={{ position: "fixed", bottom: 0, right: 0 }}
+          >
+            Toggle Panel
+          </button>
         </div>
-      </div>
-      )}
-
-      <button className ="bordered-button" onClick={togglePanel} style={{ position: 'fixed', bottom: 0, right: 0 }}>Toggle Panel</button>
       </div>
       {/* "Open Panel" button outside of the side panel */}
-      <div className={`side-panel ${isPanelOpen ? 'closed' : ''}`}>
+      <div className={`side-panel ${isPanelOpen ? "closed" : ""}`}>
         {!isPanelOpen && (
           <div className="open-panel-button-container">
             <button className="bordered-button" onClick={togglePanel}>
