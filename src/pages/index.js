@@ -596,6 +596,7 @@ export default function Main(props) {
         console.log("Received gen points on client: ");
         console.log(gens);
         setGenStats(gens);
+        setSelectedGenStats(Object.values(gens)[0]);
       });
 
       // socket.on("campResult", (result) => {
@@ -624,6 +625,7 @@ export default function Main(props) {
       // Store the data object in the ref
       dataRef.current = data;
       selectedCampStatsRef.current = campStats;
+      selectedGenStatsRef.current = genStats;
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
       // Add event listener for `click` events.
@@ -657,6 +659,9 @@ export default function Main(props) {
                   console.log("clicked on gen " + genName);
                   setActiveTab("refugeeGeneration");
                   setIsPanelOpen(true);
+                  
+                  setSelectedGenName(genName);
+                  setSelectedGenStats(selectedGenStatsRef.current[genName]);
                 }
               });
             }
@@ -689,6 +694,7 @@ export default function Main(props) {
                   setSelectedCampStats(selectedCampStatsRef.current[regionName]);
                   console.log(selectedCampStatsRef.current[regionName]);
                   setIsPanelOpen(true);
+                  
                 }
               });
             }
@@ -718,7 +724,10 @@ export default function Main(props) {
     const updateData = {
       food: selectedGenStats.food,
       healthcare: selectedGenStats.healthcare,
-      admin: selectedGenStats.admin
+      admin: selectedGenStats.admin,
+      genType:selectedGenStats.genType,
+      totalRefugees:selectedGenStats.totalRefugees,
+      newRefugees:selectedGenStats.newRefugees,
     };
 
     socket.emit("updateGenStats", selectedGenStats, selectedGenName);
@@ -781,7 +790,7 @@ export default function Main(props) {
                   <select
                     id="dropdown"
                     onChange={(event) => {
-                      //setMessage(event.target.value);
+                      setselectedRegionName(event.target.value);
                     }}
                   >
                     <option value="1">Region 1</option>
@@ -862,14 +871,119 @@ export default function Main(props) {
           {/* Content for "Refugee Gen" tab */}
           {activeTab === "refugeeGeneration" && (
             <div>
-              <div>
-                <button className="borderedd-button" onClick={sendGenUpdate}>
-                  Update
-                </button>
-                <button className="borderedd-button" onClick={sendGenUpdate}>
-                  Revert
-                </button>
-              </div>
+              { genStats && (
+                <div>
+              
+                <label htmlFor="dropdown">Generation point</label>
+                <select
+                  id="dropdown"
+                  onChange={(event) => {
+                    setSelectedGenName(event.target.value);
+                  }}
+                >
+                  <option value="1">Gen 1</option>
+                  <option value="4">Gen 4</option>
+                  <option value="6">Gen 6</option>
+                  <option value="7">Gen 7</option>
+                  <option value="8">Gen 8</option>
+                  <option value="11">Gen 11</option>
+                </select>
+                <br />
+                <br />
+                <label htmlFor="fname">Food: </label>
+                <input
+                  type="number"
+                  placeholder="Enter food level.."
+                  value={selectedGenStats.food}
+                  onChange={(event) => {
+                    selectedGenStats((prevStats) => ({
+                      ...prevStats,
+                      food: event.target.value,
+                    }));
+                  }}
+                />
+                <br />
+                <br />
+                
+                <label htmlFor="fname">Health: </label>
+                <input
+                  type="number"
+                  placeholder="Enter health level.."
+                  value={selectedGenStats.healthcare}
+                  onChange={(event) => {
+                    selectedGenStats((prevStats) => ({
+                      ...prevStats,
+                      healthcare: event.target.value,
+                    }));
+                  }}
+                />
+                <br />
+                <br />
+                <label htmlFor="fname">Admin: </label>
+                <input
+                  type="number"
+                  placeholder="Enter admin level.."
+                  value={selectedGenStats.admin}
+                  onChange={(event) => {
+                    selectedGenStats((prevStats) => ({
+                      ...prevStats,
+                      admin: event.target.value,
+                    }));
+                  }}
+                />
+                <label htmlFor="dropdown">Generation Type</label>
+                <select
+                  id="dropdown"
+                  onChange={(event) => {
+                    selectedGenStats((prevStats) => ({
+                      ...prevStats,
+                      admin: event.target.value,
+                    }));
+                  }}
+                >
+                  <option value="ORDERLY">ORDERLY</option>
+                  <option value="DISORDERLY">DISORDERLY</option>
+                  <option value="PANIC">PANIC</option>
+                  
+                </select>
+                <br />
+                <br />
+                <label htmlFor="fname">Total Refugees: </label>
+                <input
+                  type="number"
+                  placeholder="Enter Refugees.."
+                  value={selectedGenStats.totalRefugees}
+                  onChange={(event) => {
+                    selectedGenStats((prevStats) => ({
+                      ...prevStats,
+                      totalRefugees: event.target.value,
+                    }));
+                  }}
+                />
+                <br />
+                <br />
+                <label htmlFor="fname">New Refugees: </label>
+                <input
+                  type="number"
+                  placeholder="Enter new refugees.."
+                  value={selectedGenStats.newRefugees}
+                  onChange={(event) => {
+                    selectedGenStats((prevStats) => ({
+                      ...prevStats,
+                      newRefugees: event.target.value,
+                    }));
+                  }}
+                />
+                
+              
+              <button className="borderedd-button" onClick={sendGenUpdate}>
+                Update
+              </button>
+              <button className="borderedd-button" >
+                Revert
+              </button>
+            </div>
+              )}
             </div>
           )}
 
