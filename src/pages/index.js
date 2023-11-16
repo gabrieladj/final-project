@@ -570,7 +570,7 @@ export default function Main(props) {
       {/* Side Panel */}
       <div className={`side-panel ${isPanelOpen ? "open" : ""}`}>
         {/* Panel content goes here, include drop down */}
-        
+
         <div className="side-panel-header">
           <button
             className={`tab-button ${activeTab === "camps" ? "active" : ""}`}
@@ -594,22 +594,18 @@ export default function Main(props) {
           </button>
         </div>
         <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-        }}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
         >
           {/* Content for "Camps" tab */}
           {activeTab === "camps" && (
             <div>
               {campStats && isRegionSelected && (
                 <div>
-                  <label
-                    htmlFor="dropdown"
-                  >
-                    Region
-                  </label>
+                  <label htmlFor="dropdown">Region</label>
                   <select
                     id="dropdown"
                     onChange={(event) => {
@@ -684,7 +680,6 @@ export default function Main(props) {
                 </div>
               )}
 
-              
               <button className="borderedd-button" onClick={sendUpdate}>
                 Update
               </button>
