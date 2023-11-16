@@ -87,8 +87,10 @@ export default function Main(props) {
   const dataRef = useRef(null);
   const { data, error } = useSWR("/map-nodes.json", fetcher);
   const [campStats, setCampStats] = useState(null);
+  const campStatsRef = useRef(null);
   const [routeStats, setRouteStats] = useState(null);
   const [genStats, setGenStats] = useState(null);
+  const genStatsRef = useRef(null);
 
   if (error) {
     console.log("error loading json");
@@ -584,8 +586,13 @@ export default function Main(props) {
         console.log("Received camp stats on client: ");
         console.log(stats);
         setCampStats(stats);
-        setSelectedCampStats(Object.values(stats)[0]);
-        setselectedRegionName(Object.keys(stats)[0]);
+        //if (selectedCampStats == null) {
+          setSelectedCampStats(Object.values(stats)[0]);
+          setselectedRegionName(Object.keys(stats)[0]);
+        //}
+        //else {
+          //setSelectedCampStats(selectedCampStats[selectedRegionName]);
+        //}
       });
 
       socket.on("routes", (routes) => {
@@ -597,8 +604,14 @@ export default function Main(props) {
         console.log("Received gen points on client: ");
         console.log(gens);
         setGenStats(gens);
-        setSelectedGenStats(Object.values(gens)[0]);
-        setSelectedGenName(Object.keys(gens)[0]);
+        //if (selectedGenStats == null) {
+          setSelectedGenStats(Object.values(gens)[0]);
+          setSelectedGenName(Object.keys(gens)[0]);
+        //}
+        //else {
+          //setSelectedGenStats(selectedGenStats[selectedGenName]);
+          //console.log("called")
+        //}
       });
 
       // socket.on("campResult", (result) => {
@@ -626,8 +639,10 @@ export default function Main(props) {
     if (data) {
       // Store the data object in the ref
       dataRef.current = data;
-      selectedCampStatsRef.current = campStats;
-      selectedGenStatsRef.current = genStats;
+      //selectedCampStatsRef.current = campStats;
+      //selectedGenStatsRef.current = genStats;
+      campStatsRef.current = campStats;
+      genStatsRef.current = genStats;
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
       // Add event listener for `click` events.
@@ -641,7 +656,7 @@ export default function Main(props) {
           var clickLoc = { x: canvasX, y: canvasY };
           const data = dataRef.current;
           //handleInput(clickLoc, data, scale)
-          if (!data || !selectedCampStatsRef.current || !selectedGenStatsRef.current) return;
+          if (!data) return;
           const campClickTarget = campSize / 2;
 
           console.log(JSON.stringify(clickLoc));
@@ -653,17 +668,21 @@ export default function Main(props) {
                 const gen = region["gens"][genName];
                 var radius = genRadius * 1.4;
                 if (
-                  clickLoc.x < gen.x + radius &&
+                  (clickLoc.x < gen.x + radius && // gen node click
                   clickLoc.x > gen.x - radius &&
                   clickLoc.y < gen.y + radius &&
-                  clickLoc.y > gen.y - radius
+                  clickLoc.y > gen.y - radius) || 
+                  (clickLoc.x > gen['statsPos'].x && // gen stats click
+                  clickLoc.x < gen['statsPos'].x + genStatsWidth &&
+                  clickLoc.y > gen['statsPos'].y && 
+                  clickLoc.y < gen['statsPos'].y + genStatsHeight)
                 ) {
                   console.log("clicked on gen " + genName);
                   setActiveTab("refugeeGeneration");
                   setIsPanelOpen(true);
                   
                   setSelectedGenName(genName);
-                  setSelectedGenStats(selectedGenStatsRef.current[genName]);
+                  setSelectedGenStats(genStatsRef.current[genName]);
                 }
               });
             }
@@ -677,8 +696,8 @@ export default function Main(props) {
               ) {
                 console.log("clicked on region " + regionName);
                 setselectedRegionName(regionName);
-                setSelectedCampStats(selectedCampStatsRef.current[regionName]);
-                console.log(selectedCampStatsRef.current[regionName]);
+                setSelectedCampStats(campStatsRef.current[regionName]);
+                console.log(campStatsRef.current[regionName]);
                 setActiveTab("camps");
                 setIsPanelOpen(true);
               }
@@ -693,8 +712,8 @@ export default function Main(props) {
                 ) {
                   console.log("clicked on camp " + campName);
                   setselectedRegionName(regionName);
-                  setSelectedCampStats(selectedCampStatsRef.current[regionName]);
-                  console.log(selectedCampStatsRef.current[regionName]);
+                  setSelectedCampStats(campStatsRef.current[regionName]);
+                  console.log(campStatsRef.current[regionName]);
                   setActiveTab("camps");
                   setIsPanelOpen(true);
                   
@@ -795,7 +814,7 @@ export default function Main(props) {
                     value={selectedRegionName}
                     onChange={(event) => {
                       setselectedRegionName(event.target.value);
-                      setSelectedCampStats(campStats[selectedRegionName]);
+                      setSelectedCampStats(campStats[event.target.value]);
                     }}
                   >
                     <option value="1">Region 1</option>
@@ -807,6 +826,20 @@ export default function Main(props) {
                   </select>
                   <br />
                   <br />
+                  <label htmlFor="fname">Refugees: </label>
+                  <input
+                    type="number"
+                    placeholder="Enter refugee number.."
+                    value={selectedCampStats.refugeesPresent}
+                    onChange={(event) => {
+                      setSelectedCampStats((prevStats) => ({
+                        ...prevStats,
+                        refugeesPresent: event.target.value,
+                      }));
+                    }}
+                  />
+                  <br />
+                  <br />
                   <label htmlFor="fname">Food: </label>
                   <input
                     type="number"
@@ -816,20 +849,6 @@ export default function Main(props) {
                       setSelectedCampStats((prevStats) => ({
                         ...prevStats,
                         food: event.target.value,
-                      }));
-                    }}
-                  />
-                  <br />
-                  <br />
-                  <label htmlFor="fname">Housing: </label>
-                  <input
-                    type="number"
-                    placeholder="Enter housing level.."
-                    value={selectedCampStats.housing}
-                    onChange={(event) => {
-                      setSelectedCampStats((prevStats) => ({
-                        ...prevStats,
-                        housing: event.target.value,
                       }));
                     }}
                   />
@@ -849,6 +868,20 @@ export default function Main(props) {
                   />
                   <br />
                   <br />
+                  <label htmlFor="fname">Housing: </label>
+                  <input
+                    type="number"
+                    placeholder="Enter housing level.."
+                    value={selectedCampStats.housing}
+                    onChange={(event) => {
+                      setSelectedCampStats((prevStats) => ({
+                        ...prevStats,
+                        housing: event.target.value,
+                      }));
+                    }}
+                  />
+                  <br />
+                  <br />
                   <label htmlFor="fname">Admin: </label>
                   <input
                     type="number"
@@ -863,7 +896,8 @@ export default function Main(props) {
                   />
                 </div>
               )}
-
+              <br />
+              <br />
               <button className="borderedd-button" onClick={sendCampUpdate}>
                 Update
               </button>
@@ -885,7 +919,7 @@ export default function Main(props) {
                   value={selectedGenName}
                   onChange={(event) => {
                     setSelectedGenName(event.target.value);
-                    setSelectedGenStats(genStats[selectedGenName]);
+                    setSelectedGenStats(genStats[event.target.value]);
                   }}
                 >
                   <option value="1">Gen 1</option>
@@ -895,6 +929,34 @@ export default function Main(props) {
                   <option value="5">Gen 5</option>
                   <option value="6">Gen 6</option>
                 </select>
+                <br />
+                <br />
+                <label htmlFor="fname">Total Refugees: </label>
+                <input
+                  type="number"
+                  placeholder="Enter Refugees.."
+                  value={selectedGenStats.totalRefugees}
+                  onChange={(event) => {
+                    setSelectedGenStats((prevStats) => ({
+                      ...prevStats,
+                      totalRefugees: event.target.value,
+                    }));
+                  }}
+                />
+                <br />
+                <br />
+                <label htmlFor="fname">New Refugees: </label>
+                <input
+                  type="number"
+                  placeholder="Enter new refugees.."
+                  value={selectedGenStats.newRefugees}
+                  onChange={(event) => {
+                    setSelectedGenStats((prevStats) => ({
+                      ...prevStats,
+                      newRefugees: event.target.value,
+                    }));
+                  }}
+                />
                 <br />
                 <br />
                 <label htmlFor="fname">Food: </label>
@@ -954,36 +1016,9 @@ export default function Main(props) {
                   <option value="PANIC">PANIC</option>
                   
                 </select>
-                <br />
-                <br />
-                <label htmlFor="fname">Total Refugees: </label>
-                <input
-                  type="number"
-                  placeholder="Enter Refugees.."
-                  value={selectedGenStats.totalRefugees}
-                  onChange={(event) => {
-                    setSelectedGenStats((prevStats) => ({
-                      ...prevStats,
-                      totalRefugees: event.target.value,
-                    }));
-                  }}
-                />
-                <br />
-                <br />
-                <label htmlFor="fname">New Refugees: </label>
-                <input
-                  type="number"
-                  placeholder="Enter new refugees.."
-                  value={selectedGenStats.newRefugees}
-                  onChange={(event) => {
-                    setSelectedGenStats((prevStats) => ({
-                      ...prevStats,
-                      newRefugees: event.target.value,
-                    }));
-                  }}
-                />
                 
-              
+              <br />
+              <br />
               <button className="borderedd-button" onClick={sendGenUpdate}>
                 Update
               </button>

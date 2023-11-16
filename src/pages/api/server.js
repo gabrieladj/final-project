@@ -52,7 +52,8 @@ const SocketHandler = (req, res) => {
             food: parseInt(data.food),
             healthcare: parseInt(data.healthcare),
             housing: parseInt(data.housing),
-            admin: parseInt(data.admin)
+            admin: parseInt(data.admin),
+            refugeesPresent: parseInt(data.refugeesPresent)
           },
         });
         // Broadcast the updated data to all connected clients
