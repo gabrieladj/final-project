@@ -50,8 +50,29 @@ const SocketHandler = (req, res) => {
           },
           data: {
             food: parseInt(data.food),
-            housing: parseInt(data.housing),
             healthcare: parseInt(data.healthcare),
+            housing: parseInt(data.housing),
+            admin: parseInt(data.admin)
+          },
+        });
+        // Broadcast the updated data to all connected clients
+        //io.emit('campStatsUpdated', data, region);
+        //console.log('Database updated')
+      });
+
+      socket.on("updateGenStats", async (data, genName) => {
+        console.log("receieved gen update");
+        console.log("data: ");
+        console.log(data);
+        //const{selectedRegion, food, housing, healthcare,} = data
+        await prisma.RefugeeGen.update({
+          where: {
+            id: parseInt(genName),
+          },
+          data: {
+            food: parseInt(data.food),
+            healthcare: parseInt(data.healthcare),
+            admin: parseInt(data.admin)
           },
         });
         // Broadcast the updated data to all connected clients

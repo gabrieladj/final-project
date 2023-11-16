@@ -34,13 +34,14 @@ function loadImages(sources, callback) {
 }
 
 export default function Main(props) {
-  const [message, setMessage] = useState("");
-  const [messageRecieve, setMessageRecieve] = useState("");
-  const [IndcampStats, setIndCampStats] = useState(null);
-  const [selectedRegion, setselectedRegion] = useState(null);
-  const [isRegionSelected, setisRegionSelected] = useState(false);
-  const [selectCampStats, setSelectCampStats] = useState(null);
+  const [selectedRegionName, setselectedRegionName] = useState(null);
+  const [selectedCampStats, setSelectedCampStats] = useState(null);
   const selectedCampStatsRef = useRef(null);
+
+  const [selectedGenName, setSelectedGenName] = useState(null);
+  const [selectedGenStats, setSelectedGenStats] = useState(null);
+  const selectedGenStatsRef = useRef(null);
+  
   const [activeTab, setActiveTab] = useState("camps");
   const [showTimer, setShowTimer] = useState(false);
   const [timer, setTimer] = useState(0);
@@ -579,16 +580,11 @@ export default function Main(props) {
         console.log("connected");
       });
 
-      socket.on("receive_message", (data) => {
-        setMessageRecieve(data.message);
-        alert(data.message);
-        console.log("message was sent");
-      });
-
       socket.on("camp_stats", (stats) => {
         console.log("Received camp stats on client: ");
         console.log(stats);
         setCampStats(stats);
+        setSelectedCampStats(Object.values(stats)[0]);
       });
 
       socket.on("routes", (routes) => {
@@ -602,13 +598,13 @@ export default function Main(props) {
         setGenStats(gens);
       });
 
-      socket.on("campResult", (result) => {
-        console.log("Received camp:");
-        console.log(result);
-        setIndCampStats(result);
+      // socket.on("campResult", (result) => {
+      //   console.log("Received camp:");
+      //   console.log(result);
+      //   setIndCampStats(result);
 
-        // Handle the result as needed
-      });
+      //   // Handle the result as needed
+      // });
 
       socket.on("campsStatsUpdated", (updatedData) => {
         console.log("Camp stats updated:", updatedData);
@@ -648,6 +644,7 @@ export default function Main(props) {
           Object.keys(data["regions"]).map((regionName) => {
             const region = data["regions"][regionName];
             if ("gens" in region) {
+              // clicking on gen points
               Object.keys(region["gens"]).map((genName) => {
                 const gen = region["gens"][genName];
                 var radius = genRadius * 1.4;
@@ -658,11 +655,13 @@ export default function Main(props) {
                   clickLoc.y > gen.y - radius
                 ) {
                   console.log("clicked on gen " + genName);
+                  setActiveTab("refugeeGeneration");
                   setIsPanelOpen(true);
                 }
               });
             }
             if ("camps" in region) {
+              // clicking on camp stats
               if (
                 clickLoc.x > region["campsStatsPos"].x &&
                 clickLoc.x < region["campsStatsPos"].x + campStatsWidth &&
@@ -670,13 +669,13 @@ export default function Main(props) {
                 clickLoc.y < region["campsStatsPos"].y + campStatsHeight
               ) {
                 console.log("clicked on region " + regionName);
-                  setisRegionSelected(true);
-                  setselectedRegion(regionName);
-                  setSelectCampStats(selectedCampStatsRef.current[regionName]);
+                  setselectedRegionName(regionName);
+                  setSelectedCampStats(selectedCampStatsRef.current[regionName]);
                   console.log(selectedCampStatsRef.current[regionName]);
                   setIsPanelOpen(true);
               }
               Object.keys(region["camps"]).map((campName) => {
+                // clicking on camp nodes
                 var node = region["camps"][campName];
                 if (
                   clickLoc.x < node.x + campClickTarget &&
@@ -685,9 +684,9 @@ export default function Main(props) {
                   clickLoc.y > node.y - campClickTarget
                 ) {
                   console.log("clicked on camp " + campName);
-                  setisRegionSelected(true);
-                  setselectedRegion(regionName);
-                  setSelectCampStats(selectedCampStatsRef.current[regionName]);
+                  setActiveTab("camps");
+                  setselectedRegionName(regionName);
+                  setSelectedCampStats(selectedCampStatsRef.current[regionName]);
                   console.log(selectedCampStatsRef.current[regionName]);
                   setIsPanelOpen(true);
                 }
@@ -701,18 +700,30 @@ export default function Main(props) {
     }
   }, [data, campStats]);
 
-  const sendUpdate = () => {
+  const sendCampUpdate = () => {
     const updateData = {
-      selectedRegion: selectedRegion,
-      food: selectCampStats.food,
-      housing: selectCampStats.housing,
-      healthcare: selectCampStats.healthcare,
+      refugeesPresent: selectedCampStats.refugeesPresent,
+      food: selectedCampStats.food,
+      healthcare: selectedCampStats.healthcare,
+      housing: selectedCampStats.housing,
+      admin: selectedCampStats.admin,
     };
 
-    socket.emit("updateCampStats", selectCampStats, selectedRegion);
+    socket.emit("updateCampStats", selectedCampStats, selectedRegionName);
     console.log("Update was sent");
     console.log(updateData);
-    //setMessageRecieve('Update sent successfully')
+  };
+
+  const sendGenUpdate = () => {
+    const updateData = {
+      food: selectedGenStats.food,
+      healthcare: selectedGenStats.healthcare,
+      admin: selectedGenStats.admin
+    };
+
+    socket.emit("updateGenStats", selectedGenStats, selectedGenName);
+    console.log("Update was sent");
+    console.log(updateData);
   };
 
   return (
@@ -764,13 +775,13 @@ export default function Main(props) {
           {/* Content for "Camps" tab */}
           {activeTab === "camps" && (
             <div>
-              {campStats && isRegionSelected && (
+              {campStats && (
                 <div>
                   <label htmlFor="dropdown">Region</label>
                   <select
                     id="dropdown"
                     onChange={(event) => {
-                      setMessage(event.target.value);
+                      //setMessage(event.target.value);
                     }}
                   >
                     <option value="1">Region 1</option>
@@ -786,9 +797,9 @@ export default function Main(props) {
                   <input
                     type="number"
                     placeholder="Enter food level.."
-                    value={selectCampStats.food}
+                    value={selectedCampStats.food}
                     onChange={(event) => {
-                      setSelectCampStats((prevStats) => ({
+                      setSelectedCampStats((prevStats) => ({
                         ...prevStats,
                         food: event.target.value,
                       }));
@@ -800,9 +811,9 @@ export default function Main(props) {
                   <input
                     type="number"
                     placeholder="Enter housing level.."
-                    value={selectCampStats.housing}
+                    value={selectedCampStats.housing}
                     onChange={(event) => {
-                      setSelectCampStats((prevStats) => ({
+                      setSelectedCampStats((prevStats) => ({
                         ...prevStats,
                         housing: event.target.value,
                       }));
@@ -814,9 +825,9 @@ export default function Main(props) {
                   <input
                     type="number"
                     placeholder="Enter health level.."
-                    value={selectCampStats.healthcare}
+                    value={selectedCampStats.healthcare}
                     onChange={(event) => {
-                      setSelectCampStats((prevStats) => ({
+                      setSelectedCampStats((prevStats) => ({
                         ...prevStats,
                         healthcare: event.target.value,
                       }));
@@ -828,26 +839,23 @@ export default function Main(props) {
                   <input
                     type="number"
                     placeholder="Enter admin level.."
-                    value={selectCampStats.admin}
+                    value={selectedCampStats.admin}
                     onChange={(event) => {
-                      setSelectCampStats((prevStats) => ({
+                      setSelectedCampStats((prevStats) => ({
                         ...prevStats,
                         admin: event.target.value,
                       }));
                     }}
                   />
-
-                  <h1>{messageRecieve}</h1>
                 </div>
               )}
 
-              <button className="borderedd-button" onClick={sendUpdate}>
+              <button className="borderedd-button" onClick={sendCampUpdate}>
                 Update
               </button>
-              <button className="borderedd-button" onClick={sendUpdate}>
+              <button className="borderedd-button" onClick={sendCampUpdate}>
                 Revert
               </button>
-              <h1>{messageRecieve}</h1>
             </div>
           )}
 
@@ -855,10 +863,10 @@ export default function Main(props) {
           {activeTab === "refugeeGeneration" && (
             <div>
               <div>
-                <button className="borderedd-button" onClick={sendUpdate}>
+                <button className="borderedd-button" onClick={sendGenUpdate}>
                   Update
                 </button>
-                <button className="borderedd-button" onClick={sendUpdate}>
+                <button className="borderedd-button" onClick={sendGenUpdate}>
                   Revert
                 </button>
               </div>
