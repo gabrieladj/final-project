@@ -26,7 +26,8 @@ export async function getAllRoutes() {
     if (routes) {
         for (const route of routes) {
             data[route.id] = {
-                isOpen: route.isOpen
+                isOpen: route.isOpen,
+                supplyCap: route.supplyCap
             }
         }
     }
