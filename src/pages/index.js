@@ -585,6 +585,7 @@ export default function Main(props) {
         console.log(stats);
         setCampStats(stats);
         setSelectedCampStats(Object.values(stats)[0]);
+        setselectedRegionName(Object.keys(stats)[0]);
       });
 
       socket.on("routes", (routes) => {
@@ -597,6 +598,7 @@ export default function Main(props) {
         console.log(gens);
         setGenStats(gens);
         setSelectedGenStats(Object.values(gens)[0]);
+        setSelectedGenName(Object.keys(gens)[0]);
       });
 
       // socket.on("campResult", (result) => {
