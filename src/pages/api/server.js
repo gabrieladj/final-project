@@ -56,8 +56,9 @@ const SocketHandler = (req, res) => {
           },
         });
         // Broadcast the updated data to all connected clients
-        //io.emit('campStatsUpdated', data, region);
-        //console.log('Database updated')
+        const campStats = await getAllCampStats();
+        socket.broadcast.emit('camp_stats', campStats);
+        socket.emit('camp_stats', campStats);
       });
 
       socket.on("updateGenStats", async (data, genName) => {
@@ -70,14 +71,17 @@ const SocketHandler = (req, res) => {
             id: parseInt(genName),
           },
           data: {
+            totalRefugees: parseInt(data.totalRefugees),
+            newRefugees: parseInt(data.newRefugees),
             food: parseInt(data.food),
             healthcare: parseInt(data.healthcare),
             admin: parseInt(data.admin)
           },
         });
         // Broadcast the updated data to all connected clients
-        //io.emit('campStatsUpdated', data, region);
-        //console.log('Database updated')
+        const gens = await getAllGens();
+        socket.broadcast.emit('gens', gens);
+        socket.emit('gens', gens);
       });
     });
   }
