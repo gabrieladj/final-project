@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import "./global.css";
-import styles from "./main-page.css";
+import "./main-page.css";
 import Head from "next/head";
 import useSWR from "swr";
 import io from "socket.io-client";
@@ -39,23 +39,44 @@ export default function Main(props) {
   const [IndcampStats, setIndCampStats] = useState(null);
   const [selectedRegion, setselectedRegion] = useState(null);
   const [isRegionSelected, setisRegionSelected] = useState(false);
+  const [selectCampStats, setSelectCampStats] = useState(null);
+  const selectedCampStatsRef = useRef(null);
   const [activeTab, setActiveTab] = useState("camps");
   const [showTimer, setShowTimer] = useState(false);
   const [timer, setTimer] = useState(0);
 
-  const [selectCampStats, setSelectCampStats] = useState(null);
-  const selectedCampStatsRef = useRef(null);
-
   const canvasRef = useRef(null);
   const defaultSize = 720;
+
+  // DEBUGGING ///////////
   var drawCampNum = false,
     drawGenNum = false,
     drawPathNum = false;
+  ///////////////////////
   const genRadius = 9;
   const campSize = 26; // size of blue square
   const campDangerSize = 35; // size of red box around the blue square
   const [imgLoaded, setImgLoaded] = useState(false);
   const imagesRef = useRef(null);
+
+  // constants for stats box drawing
+  const statsInset = 1;
+  const statsIconSize = 20;
+  const statsYSpacing = 3;
+  const statsMargin = { x: 4, y: 4 };
+  // constants for camp stats box drawing
+  const campStatsHeight =
+    statsIconSize * 5 + statsMargin.y * 2 + statsYSpacing * 4;
+  const campStatsWidth = statsIconSize + 35;
+  const campStatsBGColor = "#ebebfc"; //'#d9daff';
+  // constants for gen stats box drawing
+  const genStatsWidth = statsIconSize + 45;
+  const genStatsTopHeight = 17;
+  const genStatsBottomHeight =
+    statsIconSize * 3 + statsMargin.y * 2 + statsYSpacing * 2;
+  const genStatsHeight = genStatsTopHeight + genStatsBottomHeight;
+
+  const genStatsBGColor = "#ffe8ef"; // "#efefef";'
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   // Function to toggle the panel's open/close state
@@ -74,25 +95,24 @@ export default function Main(props) {
   if (!data) console.log("loading map data...");
 
   function drawCampStats(ctx, position, stats) {
-    const imgSize = 20;
-    const ySpacing = 3;
-    const margin = { x: 4, y: 4 };
-    const imagePos = { x: position.x + margin.x, y: position.y + margin.y };
-    const textPos = {
-      x: position.x + margin.x + imgSize + 5,
-      y: position.y + margin.y + imgSize / 2 + 4,
+    const imagePos = {
+      x: position.x + statsMargin.x,
+      y: position.y + statsMargin.y,
     };
-    const boxHeight = imgSize * 5 + margin.y * 2 + ySpacing * 4;
-    const boxWidth = imgSize + 35;
-    const inset = 1;
+    const textPos = {
+      x: position.x + statsMargin.x + statsIconSize + 5,
+      y: position.y + statsMargin.y + statsIconSize / 2 + 4,
+    };
+
     ctx.fillStyle = "black";
-    ctx.fillRect(position.x, position.y, boxWidth, boxHeight);
-    ctx.fillStyle = "#efefef";
+    ctx.fillRect(position.x, position.y, campStatsWidth, campStatsHeight);
+    //ctx.fillStyle = "#efefef";
+    ctx.fillStyle = campStatsBGColor;
     ctx.fillRect(
-      position.x + inset,
-      position.y + inset,
-      boxWidth - inset * 2,
-      boxHeight - inset * 2
+      position.x + statsInset,
+      position.y + statsInset,
+      campStatsWidth - statsInset * 2,
+      campStatsHeight - statsInset * 2
     );
 
     // drawing icons
@@ -105,8 +125,14 @@ export default function Main(props) {
         imagesRef.current.admin,
       ];
       imgArray.forEach((img) => {
-        ctx.drawImage(img, imagePos.x, imagePos.y, imgSize, imgSize);
-        imagePos.y += imgSize + ySpacing;
+        ctx.drawImage(
+          img,
+          imagePos.x,
+          imagePos.y,
+          statsIconSize,
+          statsIconSize
+        );
+        imagePos.y += statsIconSize + statsYSpacing;
       });
     }
 
@@ -122,31 +148,60 @@ export default function Main(props) {
     ];
     statsArray.forEach((stat) => {
       ctx.fillText(stat, textPos.x, textPos.y);
-      textPos.y += imgSize + ySpacing;
+      textPos.y += statsIconSize + statsYSpacing;
     });
   }
 
   function drawGenStats(ctx, position, stats) {
-    const imgSize = 20;
-    const ySpacing = 3;
-    const margin = { x: 4, y: 4 };
-    const imagePos = { x: position.x + margin.x, y: position.y + margin.y };
-    const textPos = {
-      x: position.x + margin.x + imgSize + 5,
-      y: position.y + margin.y + imgSize / 2 + 4,
-    };
-    const boxHeight = imgSize * 3 + margin.y * 2 + ySpacing * 2;
-    const boxWidth = imgSize + 35;
-    const inset = 1;
-
+    // draw upper box
     ctx.fillStyle = "black";
-    ctx.fillRect(position.x, position.y, boxWidth, boxHeight);
-    ctx.fillStyle = "#efefef";
+    ctx.fillRect(position.x, position.y, genStatsWidth, genStatsTopHeight);
+    ctx.fillStyle = genStatsBGColor;
     ctx.fillRect(
-      position.x + inset,
-      position.y + inset,
-      boxWidth - inset * 2,
-      boxHeight - inset * 2
+      position.x + statsInset,
+      position.y + statsInset,
+      genStatsWidth - statsInset * 2,
+      genStatsTopHeight - statsInset * 2
+    );
+
+    ctx.font = "11px serif";
+    ctx.fillStyle = "black";
+    const refugeesText = stats.totalRefugees + " (+" + stats.newRefugees + ")";
+    const refugeesTextPos = {
+      x:
+        position.x +
+        genStatsWidth / 2 -
+        ctx.measureText(refugeesText).width / 2,
+      y: position.y + 12,
+    };
+
+    ctx.fillText(refugeesText, refugeesTextPos.x, refugeesTextPos.y);
+
+    const bottomBoxPos = {
+      x: position.x,
+      y: position.y + genStatsTopHeight - statsInset,
+    };
+    const imagePos = {
+      x: bottomBoxPos.x + statsMargin.x,
+      y: bottomBoxPos.y + statsMargin.y,
+    };
+    const textPos = {
+      x: bottomBoxPos.x + statsMargin.x + statsIconSize + 5,
+      y: bottomBoxPos.y + statsMargin.y + statsIconSize / 2 + 4,
+    };
+    ctx.fillStyle = "black";
+    ctx.fillRect(
+      bottomBoxPos.x,
+      bottomBoxPos.y,
+      genStatsWidth,
+      genStatsBottomHeight
+    );
+    ctx.fillStyle = genStatsBGColor;
+    ctx.fillRect(
+      bottomBoxPos.x + statsInset,
+      bottomBoxPos.y + statsInset,
+      genStatsWidth - statsInset * 2,
+      genStatsBottomHeight - statsInset * 2
     );
 
     // drawing icons
@@ -157,8 +212,14 @@ export default function Main(props) {
         imagesRef.current.admin,
       ];
       imgArray.forEach((img) => {
-        ctx.drawImage(img, imagePos.x, imagePos.y, imgSize, imgSize);
-        imagePos.y += imgSize + ySpacing;
+        ctx.drawImage(
+          img,
+          imagePos.x,
+          imagePos.y,
+          statsIconSize,
+          statsIconSize
+        );
+        imagePos.y += statsIconSize + statsYSpacing;
       });
     }
 
@@ -168,7 +229,7 @@ export default function Main(props) {
     const statsArray = [stats.food, stats.healthcare, stats.admin];
     statsArray.forEach((stat) => {
       ctx.fillText(stat, textPos.x, textPos.y);
-      textPos.y += imgSize + ySpacing;
+      textPos.y += statsIconSize + statsYSpacing;
     });
   }
 
@@ -188,12 +249,6 @@ export default function Main(props) {
     ctx.beginPath();
     Object.keys(data["paths"]).map((path, i) => {
       ctx.strokeStyle = "#e8bd20";
-      // check if we have data from the database for this path
-      if (routeStats != null && path in routeStats) {
-        if (!routeStats[path].isOpen) {
-          ctx.strokeStyle = "red";
-        }
-      }
 
       const node = data["paths"][path];
       const startNode = data["paths"][path].start;
@@ -226,6 +281,15 @@ export default function Main(props) {
         endCoord.x = data["regions"][endNode.region]["gens"][endNode.node].x;
         endCoord.y = data["regions"][endNode.region]["gens"][endNode.node].y;
       }
+      var isOpen = true;
+      // check if we have data from the database for this path
+      if (path in routeStats) {
+        // is it open?
+        if (!routeStats[path].isOpen) {
+          isOpen = false;
+          ctx.strokeStyle = "red";
+        }
+      }
 
       // ready to draw
       ctx.beginPath();
@@ -251,6 +315,19 @@ export default function Main(props) {
         ctx.lineTo(endCoord.x, endCoord.y);
         ctx.stroke(); // Render the path
       }
+
+      // draw the supply cap number
+      if (isOpen && "supplyCapOffset" in data["paths"][path]) {
+        ctx.fillStyle = "blue";
+        const supOffset = data["paths"][path].supplyCapOffset;
+        // add drawing offset from the start of the path
+        ctx.fillText(
+          routeStats[path].supplyCap.toString() + " sup",
+          (startCoord.x + endCoord.x) / 2 + supOffset.x,
+          (startCoord.y + endCoord.y) / 2 + supOffset.y
+        );
+      }
+
       // for debugging
       if (drawPathNum) {
         ctx.fillStyle = "black";
@@ -336,6 +413,67 @@ export default function Main(props) {
         const circleColor = "#FF0000";
         Object.keys(region["gens"]).map((gen_point) => {
           const genNode = region["gens"][gen_point];
+
+          // get stats for this region from campStats
+          // camp stats should have data from the database about each region
+          var stats = genStats[gen_point];
+          const statsPostion = genNode.statsPos;
+
+          // draw a line connecting the gen point and stats box
+          ctx.beginPath();
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 1;
+          ctx.moveTo(genNode.x, genNode.y);
+          ctx.lineTo(statsPostion.x + 35, statsPostion.y + 45);
+          ctx.stroke();
+
+          // multiplied by circle size to get outer circle size
+          const outerCircleRatio = 1.4;
+
+          // outer outline box
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.arc(
+            genNode.x,
+            genNode.y,
+            genRadius * outerCircleRatio + 1,
+            0,
+            2 * Math.PI
+          );
+          ctx.fill();
+
+          switch (stats.genType) {
+            case "ORDERLY":
+              ctx.fillStyle = "green";
+              break;
+            case "DISORDERLY":
+              ctx.fillStyle = "yellow";
+              break;
+            case "PANIC":
+              ctx.fillStyle = "#9C0000";
+              break;
+            default:
+              ctx.fillStyle = "green";
+          }
+
+          // draw outer circle (color indicating generation type)
+          ctx.beginPath();
+          ctx.arc(
+            genNode.x,
+            genNode.y,
+            genRadius * outerCircleRatio,
+            0,
+            2 * Math.PI
+          );
+          ctx.fill();
+
+          // inner outline box
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.arc(genNode.x, genNode.y, genRadius + 1, 0, 2 * Math.PI);
+          ctx.fill();
+
+          // draw inner red circle
           ctx.beginPath();
           ctx.arc(genNode.x, genNode.y, genRadius, 0, 2 * Math.PI);
           ctx.fillStyle = circleColor;
@@ -350,12 +488,6 @@ export default function Main(props) {
           );
           ctx.fillStyle = circleColor;
 
-          // get stats for this region from campStats
-          // camp stats should have data from the database about each region
-          var stats = genStats[gen_point];
-          console.log("GEN NODE: ");
-          console.log(genNode);
-          const statsPostion = genNode.statsPos;
           drawGenStats(ctx, statsPostion, stats);
 
           if (drawGenNum) {
@@ -477,6 +609,7 @@ export default function Main(props) {
 
         // Handle the result as needed
       });
+
       socket.on("campsStatsUpdated", (updatedData) => {
         console.log("Camp stats updated:", updatedData);
       });
@@ -509,14 +642,42 @@ export default function Main(props) {
           const data = dataRef.current;
           //handleInput(clickLoc, data, scale)
           if (!data) return;
-          const campClickTarget = (campSize * scale) / 2;
+          const campClickTarget = campSize / 2;
+
           console.log(JSON.stringify(clickLoc));
           Object.keys(data["regions"]).map((regionName) => {
             const region = data["regions"][regionName];
+            if ("gens" in region) {
+              Object.keys(region["gens"]).map((genName) => {
+                const gen = region["gens"][genName];
+                var radius = genRadius * 1.4;
+                if (
+                  clickLoc.x < gen.x + radius &&
+                  clickLoc.x > gen.x - radius &&
+                  clickLoc.y < gen.y + radius &&
+                  clickLoc.y > gen.y - radius
+                ) {
+                  console.log("clicked on gen " + genName);
+                  setIsPanelOpen(true);
+                }
+              });
+            }
             if ("camps" in region) {
+              if (
+                clickLoc.x > region["campsStatsPos"].x &&
+                clickLoc.x < region["campsStatsPos"].x + campStatsWidth &&
+                clickLoc.y > region["campsStatsPos"].y &&
+                clickLoc.y < region["campsStatsPos"].y + campStatsHeight
+              ) {
+                console.log("clicked on region " + regionName);
+                  setisRegionSelected(true);
+                  setselectedRegion(regionName);
+                  setSelectCampStats(selectedCampStatsRef.current[regionName]);
+                  console.log(selectedCampStatsRef.current[regionName]);
+                  setIsPanelOpen(true);
+              }
               Object.keys(region["camps"]).map((campName) => {
                 var node = region["camps"][campName];
-
                 if (
                   clickLoc.x < node.x + campClickTarget &&
                   clickLoc.x > node.x - campClickTarget &&
