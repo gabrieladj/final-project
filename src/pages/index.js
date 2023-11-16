@@ -639,7 +639,7 @@ export default function Main(props) {
           var clickLoc = { x: canvasX, y: canvasY };
           const data = dataRef.current;
           //handleInput(clickLoc, data, scale)
-          if (!data) return;
+          if (!data || !selectedCampStatsRef.current || !selectedGenStatsRef.current) return;
           const campClickTarget = campSize / 2;
 
           console.log(JSON.stringify(clickLoc));
@@ -674,10 +674,11 @@ export default function Main(props) {
                 clickLoc.y < region["campsStatsPos"].y + campStatsHeight
               ) {
                 console.log("clicked on region " + regionName);
-                  setselectedRegionName(regionName);
-                  setSelectedCampStats(selectedCampStatsRef.current[regionName]);
-                  console.log(selectedCampStatsRef.current[regionName]);
-                  setIsPanelOpen(true);
+                setselectedRegionName(regionName);
+                setSelectedCampStats(selectedCampStatsRef.current[regionName]);
+                console.log(selectedCampStatsRef.current[regionName]);
+                setActiveTab("camps");
+                setIsPanelOpen(true);
               }
               Object.keys(region["camps"]).map((campName) => {
                 // clicking on camp nodes
@@ -689,10 +690,10 @@ export default function Main(props) {
                   clickLoc.y > node.y - campClickTarget
                 ) {
                   console.log("clicked on camp " + campName);
-                  setActiveTab("camps");
                   setselectedRegionName(regionName);
                   setSelectedCampStats(selectedCampStatsRef.current[regionName]);
                   console.log(selectedCampStatsRef.current[regionName]);
+                  setActiveTab("camps");
                   setIsPanelOpen(true);
                   
                 }
@@ -789,8 +790,10 @@ export default function Main(props) {
                   <label htmlFor="dropdown">Region</label>
                   <select
                     id="dropdown"
+                    value={selectedRegionName}
                     onChange={(event) => {
                       setselectedRegionName(event.target.value);
+                      setSelectedCampStats(campStats[selectedRegionName]);
                     }}
                   >
                     <option value="1">Region 1</option>
@@ -877,16 +880,18 @@ export default function Main(props) {
                 <label htmlFor="dropdown">Generation point</label>
                 <select
                   id="dropdown"
+                  value={selectedGenName}
                   onChange={(event) => {
                     setSelectedGenName(event.target.value);
+                    setSelectedGenStats(genStats[selectedGenName]);
                   }}
                 >
                   <option value="1">Gen 1</option>
+                  <option value="2">Gen 2</option>
+                  <option value="3">Gen 3</option>
                   <option value="4">Gen 4</option>
+                  <option value="5">Gen 5</option>
                   <option value="6">Gen 6</option>
-                  <option value="7">Gen 7</option>
-                  <option value="8">Gen 8</option>
-                  <option value="11">Gen 11</option>
                 </select>
                 <br />
                 <br />
@@ -896,7 +901,7 @@ export default function Main(props) {
                   placeholder="Enter food level.."
                   value={selectedGenStats.food}
                   onChange={(event) => {
-                    selectedGenStats((prevStats) => ({
+                    setSelectedGenStats((prevStats) => ({
                       ...prevStats,
                       food: event.target.value,
                     }));
@@ -911,7 +916,7 @@ export default function Main(props) {
                   placeholder="Enter health level.."
                   value={selectedGenStats.healthcare}
                   onChange={(event) => {
-                    selectedGenStats((prevStats) => ({
+                    setSelectedGenStats((prevStats) => ({
                       ...prevStats,
                       healthcare: event.target.value,
                     }));
@@ -925,7 +930,7 @@ export default function Main(props) {
                   placeholder="Enter admin level.."
                   value={selectedGenStats.admin}
                   onChange={(event) => {
-                    selectedGenStats((prevStats) => ({
+                    setSelectedGenStats((prevStats) => ({
                       ...prevStats,
                       admin: event.target.value,
                     }));
@@ -934,10 +939,11 @@ export default function Main(props) {
                 <label htmlFor="dropdown">Generation Type</label>
                 <select
                   id="dropdown"
+                  value={selectedGenStats.genType}
                   onChange={(event) => {
-                    selectedGenStats((prevStats) => ({
+                    setSelectedGenStats((prevStats) => ({
                       ...prevStats,
-                      admin: event.target.value,
+                      genType: event.target.value,
                     }));
                   }}
                 >
@@ -954,7 +960,7 @@ export default function Main(props) {
                   placeholder="Enter Refugees.."
                   value={selectedGenStats.totalRefugees}
                   onChange={(event) => {
-                    selectedGenStats((prevStats) => ({
+                    setSelectedGenStats((prevStats) => ({
                       ...prevStats,
                       totalRefugees: event.target.value,
                     }));
@@ -968,7 +974,7 @@ export default function Main(props) {
                   placeholder="Enter new refugees.."
                   value={selectedGenStats.newRefugees}
                   onChange={(event) => {
-                    selectedGenStats((prevStats) => ({
+                    setSelectedGenStats((prevStats) => ({
                       ...prevStats,
                       newRefugees: event.target.value,
                     }));
