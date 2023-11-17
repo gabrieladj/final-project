@@ -730,7 +730,7 @@ export default function Main(props) {
       );
       draw(ctx, campStats, genStats, routeStats);
     }
-  }, [data, campStats]);
+  }, [data, campStats,genStats,routeStats]);
 
   const sendCampUpdate = () => {
     const updateData = {
@@ -761,10 +761,18 @@ export default function Main(props) {
     console.log(updateData);
   };
 
+  
+
+  const sendPathUpdate = () => {
+
+  }
+
   return (
     <div>
+      
       <div className={`canvas-container ${isPanelOpen ? "sidebar" : ""}`}>
         {/* Add a background image as a CSS background */}
+
         <div className="canvas-background" />
         <canvas
           data-testid="canvas"
@@ -775,6 +783,7 @@ export default function Main(props) {
       </div>
 
       {/* Side Panel */}
+      {campStats && genStats && routeStats &&(
       <div className={`side-panel ${isPanelOpen ? "open" : ""}`}>
         {/* Panel content goes here, include drop down */}
 
@@ -902,10 +911,10 @@ export default function Main(props) {
               )}
               <br />
               <br />
-              <button className="borderedd-button" onClick={sendCampUpdate}>
+              <button className="borderedd-button-update" onClick={sendCampUpdate}>
                 Update
               </button>
-              <button className="borderedd-button" onClick={sendCampUpdate}>
+              <button className="borderedd-button-revert" onClick={()=> setSelectedCampStats(campStats[selectedRegionName])} >
                 Revert
               </button>
             </div>
@@ -1023,10 +1032,10 @@ export default function Main(props) {
                 
               <br />
               <br />
-              <button className="borderedd-button" onClick={sendGenUpdate}>
+              <button className="borderedd-button-update" onClick={sendGenUpdate}>
                 Update
               </button>
-              <button className="borderedd-button" >
+              <button className="borderedd-button-revert" onClick={()=> setSelectedGenStats(genStats[selectedGenName])} >
                 Revert
               </button>
             </div>
@@ -1038,10 +1047,10 @@ export default function Main(props) {
           {activeTab === "paths" && (
             <div>
               <div>
-                <button className="borderedd-button" onClick={sendUpdate}>
+                <button className="borderedd-button-update" onClick={sendPathUpdate}>
                   Update
                 </button>
-                <button className="borderedd-button" onClick={sendUpdate}>
+                <button className="borderedd-button-revert" >
                   Revert
                 </button>
               </div>
@@ -1049,7 +1058,7 @@ export default function Main(props) {
           )}
 
           <button
-            className="bordered-button"
+            className="bordered-button-togglepanel"
             onClick={togglePanel}
             style={{ position: "fixed", bottom: 0, right: 0 }}
           >
@@ -1057,16 +1066,9 @@ export default function Main(props) {
           </button>
         </div>
       </div>
+      )}
       {/* "Open Panel" button outside of the side panel */}
-      <div className={`side-panel ${isPanelOpen ? "closed" : ""}`}>
-        {!isPanelOpen && (
-          <div className="open-panel-button-container">
-            <button className="bordered-button" onClick={togglePanel}>
-              Open Panel
-            </button>
-          </div>
-        )}
-      </div>
+      
     </div>
   );
 }
