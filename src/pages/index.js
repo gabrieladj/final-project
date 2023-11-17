@@ -649,6 +649,10 @@ export default function Main(props) {
       canvas.addEventListener(
         "click",
         function (event) {
+
+          if (campStatsRef.current == null || genStatsRef == null) {
+            return;
+          }
           // get click position relative to scale of canvas
           const scale = defaultSize / canvas.height;
           const canvasX = Math.floor(event.offsetX * scale);
