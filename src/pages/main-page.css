@@ -40,15 +40,22 @@ canvas {
     transition: right 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Added box-shadow transition */
   }
 
+  label{
+    font-size: large;
+    font-weight: bolder;
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  }
+
+  input{
+    font-size: large;
+    font-weight: bolder;
+  }
+
   .side-panel .bordered-button-togglepanel{
     width: 200px;
     border-radius: 20px;
   }
-  .bordered-button-openpanel{
-    
-    width: 200px;
-    border-radius: 20px;
-  }
+  
   
   /* Button styling */
   .side-panel button {
@@ -65,6 +72,21 @@ canvas {
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease; /* Added transform and box-shadow transitions */
   }
+
+  .side-panel .borderedd-button-update{
+    background-color: green;
+    border-radius: 20px;
+
+  }
+  .side-panel .borderedd-button-revert{
+    background-color: rgb(251, 78, 78);
+    border-radius: 20px;
+    
+  }
+  .side-panel .borderedd-button-revert:hover{
+    background-color:rgb(251, 78, 78) ;
+  }
+
   
   /* Hover effect for buttons */
   .side-panel button:hover {
