@@ -145,8 +145,8 @@ export default function Main(props) {
     const statsArray = [
       stats.refugeesPresent,
       stats.food,
-      stats.housing,
       stats.healthcare,
+      stats.housing,
       stats.admin,
     ];
     statsArray.forEach((stat) => {
@@ -1067,8 +1067,6 @@ export default function Main(props) {
         </div>
       </div>
       )}
-      {/* "Open Panel" button outside of the side panel */}
-      
     </div>
   );
 }
