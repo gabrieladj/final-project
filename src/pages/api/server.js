@@ -10,6 +10,19 @@ const SocketHandler = (req, res) => {
     console.log("Socket is initializing");
     const io = new Server(res.socket.server);
     res.socket.server.io = io;
+    var timerStartTime = 0;
+    var timerStopTime = 0;
+
+    // if timer is started for 1 minute, will be 60*1000 (milliseconds)
+    var timerTotalTime = 0; 
+    var timerRunning = false;
+
+
+    function getTimeRemaining() {
+      const now = new Date();
+      console.log(timerTotalTime + "  - " + now.getTime() + " - " + timerStartTime);
+      return timerTotalTime - (now.getTime() - timerStartTime);
+    }
 
     io.on("connection", async (socket) => {
       console.log(`User connected: ${socket.id}`);
@@ -23,9 +36,13 @@ const SocketHandler = (req, res) => {
       socket.emit("routes", routes);
       socket.emit("gens", gens);
 
-      socket.on("send_message", (data) => {
-        socket.broadcast.emit("receive_message", data);
-      });
+      if (timerRunning) {
+        if (new Date().getTime() < timerStopTime) 
+          socket.emit('startTimer', timerStopTime);
+        else {
+          timerRunning = false;
+        }
+      }
 
       socket.on("updateLevelFood", async (data) => {
         try {
@@ -87,9 +104,12 @@ const SocketHandler = (req, res) => {
       });
 
       socket.on("startTimer", (seconds) => {
-        console.log("Starting timer for " + seconds + " seconds")
-        socket.broadcast.emit('startTimer', seconds);
-        socket.emit('startTimer', seconds);
+        const now = new Date();
+        timerStartTime = now.getTime();
+        timerStopTime = timerStartTime + seconds*1000;
+        timerRunning = true;
+        socket.broadcast.emit('startTimer', timerStopTime);
+        socket.emit('startTimer', timerStopTime);
       });
     });
   }

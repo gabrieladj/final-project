@@ -1,4 +1,5 @@
-export function drawTimer(ctx, position, secondsRemaining) {
+export function drawTimer(ctx, position, millisRemaining) {
+    const secondsRemaining = millisRemaining / 1000;
     ctx.fillStyle = 'black';
     const width = 160;
     const height = 90;
@@ -11,7 +12,7 @@ export function drawTimer(ctx, position, secondsRemaining) {
     ctx.fillText(label, textX, position.y + 35);
     
     const minutes = (Math.floor(secondsRemaining / 60)).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false});
-    const seconds = (secondsRemaining % 60).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false});
+    const seconds = (Math.floor(secondsRemaining % 60)).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false});
     const timerText = minutes + ":" + seconds;
     if (secondsRemaining < 60) {
         ctx.fillStyle = 'red';
