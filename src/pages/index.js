@@ -41,10 +41,11 @@ export default function Main(props) {
   const [selectedGenName, setSelectedGenName] = useState(null);
   const [selectedGenStats, setSelectedGenStats] = useState(null);
   const selectedGenStatsRef = useRef(null);
-  
   const [activeTab, setActiveTab] = useState("camps");
-  const [showTimer, setShowTimer] = useState(false);
-  const [timer, setTimer] = useState(0);
+
+  const [minutes, setMinutes] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [isActive, setIsActive] = useState(false);
 
   const canvasRef = useRef(null);
   const defaultSize = 720;
@@ -145,8 +146,8 @@ export default function Main(props) {
     const statsArray = [
       stats.refugeesPresent,
       stats.food,
-      stats.housing,
       stats.healthcare,
+      stats.housing,
       stats.admin,
     ];
     statsArray.forEach((stat) => {
@@ -553,7 +554,7 @@ export default function Main(props) {
       ctx.scale(size / defaultSize, size / defaultSize);
       draw(ctx, campStats, genStats, routeStats);
     }
-
+    
     // list of all the images we need to load
     var sources = {
       refugee: "/refugee.png",
@@ -570,7 +571,40 @@ export default function Main(props) {
     });
 
     resizeCanvas();
-  });
+  }, [data, campStats]);
+
+  useEffect(() => {
+    let interval;
+    if (isActive) {
+      interval = setInterval(() => {
+        if (minutes === 0 && seconds === 0) {
+          clearInterval(interval);
+          setIsActive(false);
+        } else {
+          if (seconds === 0) {
+            setMinutes((prevMinutes) => prevMinutes - 1);
+            setSeconds(59);
+          } else {
+            setSeconds((prevSeconds) => prevSeconds - 1);
+          }
+        }
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [isActive, minutes, seconds]);
+
+  const handleToggle = () => {
+    if (!isActive) {
+      // Start the timer with the user-specified time
+      // For simplicity, let's assume the user input is in seconds
+      const totalSeconds = minutes * 60 + seconds;
+      setMinutes(Math.floor(totalSeconds / 60));
+      setSeconds(totalSeconds % 60);
+    }
+
+    setIsActive(!isActive);
+  };
 
   // effect for initializing socket. empty dependancy array to make it run only once
   useEffect(() => {
@@ -808,7 +842,9 @@ export default function Main(props) {
           >
             Paths
           </button>
+          
         </div>
+        
         <div
           style={{
             display: "flex",
@@ -816,6 +852,7 @@ export default function Main(props) {
             alignItems: "flex-start",
           }}
         >
+          
           {/* Content for "Camps" tab */}
           {activeTab === "camps" && (
             <div>
@@ -910,16 +947,53 @@ export default function Main(props) {
                 </div>
               )}
               <br />
-              <br />
+
               <button className="borderedd-button-update" onClick={sendCampUpdate}>
                 Update
               </button>
               <button className="borderedd-button-revert" onClick={()=> setSelectedCampStats(campStats[selectedRegionName])} >
                 Revert
               </button>
+              <button className="borderedd-button-timer" onClick={handleToggle}>
+                Start Timer</button>
+              {isActive && (
+                <div>
+                  <p><center>
+                  Time Remaining: {String(minutes).padStart(2, '0')}:
+                  {String(seconds).padStart(2, '0')}
+                  </center></p>
+                </div>
+              )}
+              {isActive || (
+                <div>
+                <label>
+                 Minutes:
+                <input
+                type="number"
+                value={minutes}
+                onChange={(e) => setMinutes(parseInt(e.target.value, 10))}
+                />
+                </label>
+                <label>
+                Seconds:
+                <input
+                type="number"
+                value={seconds}
+                onChange={(e) => setSeconds(parseInt(e.target.value, 10))}
+              />
+              </label>
             </div>
-          )}
+            )}    
+          </div>
+        )}
 
+<div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
           {/* Content for "Refugee Gen" tab */}
           {activeTab === "refugeeGeneration" && (
             <div>
@@ -957,7 +1031,7 @@ export default function Main(props) {
                   }}
                 />
                 <br />
-                <br />
+                <br />  
                 <label htmlFor="fname">New Refugees: </label>
                 <input
                   type="number"
@@ -1027,7 +1101,6 @@ export default function Main(props) {
                   <option value="ORDERLY">ORDERLY</option>
                   <option value="DISORDERLY">DISORDERLY</option>
                   <option value="PANIC">PANIC</option>
-                  
                 </select>
                 
               <br />
@@ -1043,7 +1116,7 @@ export default function Main(props) {
             </div>
           )}
 
-          {/* Content for "Refugee Gen" tab */}
+          {/* Content for "Paths" tab */}
           {activeTab === "paths" && (
             <div>
               <div>
@@ -1066,9 +1139,8 @@ export default function Main(props) {
           </button>
         </div>
       </div>
+      </div>
       )}
-      {/* "Open Panel" button outside of the side panel */}
-      
     </div>
   );
 }
