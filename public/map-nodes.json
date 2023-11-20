@@ -1,466 +1,466 @@
 {
-    "regions" : {
-        "1" : {
-            "camps": {
-              "3" : {
-                  "x": 78,
-                  "y": 335
-              },
-              "4" : {
-                  "x": 115,
-                  "y": 445
-              }
-            },
-            "gens" : {
-                "4" : {
-                    "letter": "A",
-                    "x": 180,
-                    "y": 480,
-                    "statsPos": {
-                        "x": 120,
-                        "y": 530
-                    }
-                }
-            },
-            "campsStatsPos": {
-                "x": 10,
-                "y": 375
-            },
-            "labelPos": {
-                "x": 115,
-                "y": 400
-            }
+    "regions": {
+      "1": {
+        "camps": {
+          "3": {
+            "x": 258,
+            "y": 335
+          },
+          "4": {
+            "x": 295,
+            "y": 445
+          }
         },
-        "2" : {
-            "gens": {
-                "1" : {
-                    "letter": "C",
-                    "x": 150,
-                    "y": 270,
-                    "statsPos": {
-                        "x": 40,
-                        "y": 190
-                    }
-                },
-                "2" : {
-                    "letter": "B",
-                    "x": 275,
-                    "y": 295,
-                    "statsPos": {
-                        "x": 255,
-                        "y": 175
-                    }
-                },
-                "3" : {
-                    "letter": "A",
-                    "x": 205,
-                    "y": 410,
-                    "statsPos": {
-                        "x": 265,
-                        "y": 345
-                    }
-                }
-            },
-            "labelPos": {
-                "x": 190,
-                "y": 350
+        "gens": {
+          "4": {
+            "letter": "A",
+            "x": 360,
+            "y": 480,
+            "statsPos": {
+              "x": 300,
+              "y": 530
             }
+          }
         },
-        "3": {
-            "gens": {
-                "5" : {
-                    "letter": "A",
-                    "x": 255,
-                    "y": 460,
-                    "statsPos": {
-                        "x": 220,
-                        "y": 570
-                    }
-                },
-                "6" : {
-                    "letter": "B",
-                    "x": 380,
-                    "y": 470,
-                    "statsPos": {
-                        "x": 450,
-                        "y": 400
-                    }
-                }
-            },
-            "labelPos": {
-                "x": 300,
-                "y": 450
-            }
+        "campsStatsPos": {
+          "x": 190,
+          "y": 375
         },
-        "4" : {
-            "camps": {
-              "5" : {
-                  "x": 450,
-                  "y": 345
-              }
-            },
-            "campsStatsPos": {
-                "x": 475,
-                "y": 220
-            },
-            "labelPos": {
-                "x": 390,
-                "y": 380
-            }
-        },
-        "6" : {
-            "camps": {
-                "1" : {
-                    "x": 165,
-                    "y": 35
-                },
-                "2" : {
-                    "x": 125,
-                    "y": 115
-                }
-            },
-            "campsStatsPos": {
-                "x": 195,
-                "y": 50
-            },
-            "labelPos": {
-                "x": 160,
-                "y": 180
-            }
-        },
-        "7" : {
-            "camps": {
-                "10" : {
-                    "x": 350,
-                    "y": 600
-                }
-            },
-            "campsStatsPos": {
-                "x": 395,
-                "y": 595
-            },
-            "labelPos": {
-                "x": 360,
-                "y": 650
-            }
-        },
-        "8" : {
-            "camps": {
-                "7" : {
-                    "x": 630,
-                    "y": 560
-                },
-                "8" : {
-                    "x": 630,
-                    "y": 610
-                },
-                "9" : {
-                    "x": 550,
-                    "y": 650
-                }
-            },
-            "campsStatsPos": {
-                "x": 660,
-                "y": 540
-            },
-            "labelPos": {
-                "x": 570,
-                "y": 560
-            }
-        },
-        "11" : {
-            "camps": {
-                "6" : {
-                    "x": 630,
-                    "y": 380
-                }
-            },
-            "campsStatsPos": {
-                "x": 660,
-                "y": 345
-            },
-            "labelPos": {
-                "x": 550,
-                "y": 290
-            }
+        "labelPos": {
+          "x": 295,
+          "y": 400
         }
+      },
+      "2": {
+        "gens": {
+          "1": {
+            "letter": "A",
+            "x": 385,
+            "y": 410,
+            "statsPos": {
+              "x": 445,
+              "y": 345
+            }
+          },
+          "2": {
+            "letter": "B",
+            "x": 455,
+            "y": 295,
+            "statsPos": {
+              "x": 435,
+              "y": 175
+            }
+          },
+          "3": {
+            "letter": "C",
+            "x": 330,
+            "y": 270,
+            "statsPos": {
+              "x": 220,
+              "y": 190
+            }
+          }
+        },
+        "labelPos": {
+          "x": 370,
+          "y": 350
+        }
+      },
+      "3": {
+        "gens": {
+          "5": {
+            "letter": "A",
+            "x": 435,
+            "y": 460,
+            "statsPos": {
+              "x": 400,
+              "y": 570
+            }
+          },
+          "6": {
+            "letter": "B",
+            "x": 560,
+            "y": 470,
+            "statsPos": {
+              "x": 630,
+              "y": 400
+            }
+          }
+        },
+        "labelPos": {
+          "x": 480,
+          "y": 450
+        }
+      },
+      "4": {
+        "camps": {
+          "5": {
+            "x": 630,
+            "y": 345
+          }
+        },
+        "campsStatsPos": {
+          "x": 655,
+          "y": 220
+        },
+        "labelPos": {
+          "x": 570,
+          "y": 380
+        }
+      },
+      "6": {
+        "camps": {
+          "1": {
+            "x": 345,
+            "y": 35
+          },
+          "2": {
+            "x": 305,
+            "y": 115
+          }
+        },
+        "campsStatsPos": {
+          "x": 375,
+          "y": 50
+        },
+        "labelPos": {
+          "x": 340,
+          "y": 180
+        }
+      },
+      "7": {
+        "camps": {
+          "10": {
+            "x": 530,
+            "y": 600
+          }
+        },
+        "campsStatsPos": {
+          "x": 575,
+          "y": 595
+        },
+        "labelPos": {
+          "x": 540,
+          "y": 650
+        }
+      },
+      "8": {
+        "camps": {
+          "7": {
+            "x": 810,
+            "y": 560
+          },
+          "8": {
+            "x": 810,
+            "y": 610
+          },
+          "9": {
+            "x": 730,
+            "y": 650
+          }
+        },
+        "campsStatsPos": {
+          "x": 840,
+          "y": 540
+        },
+        "labelPos": {
+          "x": 750,
+          "y": 560
+        }
+      },
+      "11": {
+        "camps": {
+          "6": {
+            "x": 810,
+            "y": 380
+          }
+        },
+        "campsStatsPos": {
+          "x": 840,
+          "y": 345
+        },
+        "labelPos": {
+          "x": 730,
+          "y": 290
+        }
+      }
     },
-    "paths" : {
-        "1" : {
-            "start": {
-                "type": "camp",
-                "region": "6",
-                "node": "1"
-            },
-            "end": {
-                "type": "camp",
-                "region": "6",
-                "node": "2"
-            }
+    "paths": {
+      "1": {
+        "start": {
+          "type": "camp",
+          "region": "6",
+          "node": "1"
         },
-        "2" : {
-            "start": {
-                "type": "camp",
-                "region": "6",
-                "node": "2"
-            },
-            "end": {
-                "type": "gen",
-                "region": "2",
-                "node": "1"
-            },
-            "supplyCapOffset": {
-                "x": 15,
-                "y": 20
-            }
+        "end": {
+          "type": "camp",
+          "region": "6",
+          "node": "2"
+        }
+      },
+      "2": {
+        "start": {
+          "type": "camp",
+          "region": "6",
+          "node": "2"
         },
-        "3" : {
-            "start": {
-                "type": "gen",
-                "region": "2",
-                "node": "1"
-            },
-            "end": {
-                "type": "camp",
-                "region": "1",
-                "node": "3"
-            }
+        "end": {
+          "type": "gen",
+          "region": "2",
+          "node": "3"
         },
-        "4" : {
-            "start": {
-                "type": "gen",
-                "region": "2",
-                "node": "1"
-            },
-            "end": {
-                "type": "gen",
-                "region": "2",
-                "node": "2"
-            }
+        "supplyCapOffset": {
+          "x": 15,
+          "y": 20
+        }
+      },
+      "3": {
+        "start": {
+          "type": "gen",
+          "region": "2",
+          "node": "3"
         },
-        "5" : {
-            "start": {
-                "type": "camp",
-                "region": "1",
-                "node": "3"
-            },
-            "end": {
-                "type": "camp",
-                "region": "1",
-                "node": "4"
-            }
+        "end": {
+          "type": "camp",
+          "region": "1",
+          "node": "3"
+        }
+      },
+      "4": {
+        "start": {
+          "type": "gen",
+          "region": "2",
+          "node": "1"
         },
-        "6" : {
-            "start": {
-                "type": "camp",
-                "region": "1",
-                "node": "4"
-            },
-            "end": {
-                "type": "gen",
-                "region": "1",
-                "node": "4"
-            }
+        "end": {
+          "type": "gen",
+          "region": "2",
+          "node": "2"
+        }
+      },
+      "5": {
+        "start": {
+          "type": "camp",
+          "region": "1",
+          "node": "3"
         },
-        "7" : {
-            "start": {
-                "type": "camp",
-                "region": "1",
-                "node": "4"
-            },
-            "end": {
-                "type": "gen",
-                "region": "2",
-                "node": "3"
-            },
-            "supplyCapOffset": {
-                "x": -15,
-                "y": -10
-            }
+        "end": {
+          "type": "camp",
+          "region": "1",
+          "node": "4"
+        }
+      },
+      "6": {
+        "start": {
+          "type": "camp",
+          "region": "1",
+          "node": "4"
         },
-        "8" : {
-            "start": {
-                "type": "gen",
-                "region": "2",
-                "node": "3"
-            },
-            "end": {
-                "type": "gen",
-                "region": "2",
-                "node": "2"
-            }
+        "end": {
+          "type": "gen",
+          "region": "1",
+          "node": "4"
+        }
+      },
+      "7": {
+        "start": {
+          "type": "camp",
+          "region": "1",
+          "node": "4"
         },
-        "9" : {
-            "start": {
-                "type": "gen",
-                "region": "2",
-                "node": "2"
-            },
-            "end": {
-                "type": "camp",
-                "region": "4",
-                "node": "5"
-            },
-            "supplyCapOffset": {
-                "x": -10,
-                "y": 20
-            }
+        "end": {
+          "type": "gen",
+          "region": "2",
+          "node": "1"
         },
-        "10" : {
-            "start": {
-                "type": "gen",
-                "region": "2",
-                "node": "2"
-            },
-            "end": {
-                "type": "camp",
-                "region": "4",
-                "node": "5"
-            },
-            "cp1": {
-                "x": 100,
-                "y": -40
-            },
-            "cp2": {
-                "x": 0,
-                "y": -50
-            }
+        "supplyCapOffset": {
+          "x": -15,
+          "y": -10
+        }
+      },
+      "8": {
+        "start": {
+          "type": "gen",
+          "region": "2",
+          "node": "3"
         },
-        "11" : {
-            "start": {
-                "type": "camp",
-                "region": "4",
-                "node": "5"
-            },
-            "end": {
-                "type": "camp",
-                "region": "11",
-                "node": "6"
-            }
+        "end": {
+          "type": "gen",
+          "region": "2",
+          "node": "2"
+        }
+      },
+      "9": {
+        "start": {
+          "type": "gen",
+          "region": "2",
+          "node": "2"
         },
-        "12" : {
-            "start": {
-                "type": "camp",
-                "region": "11",
-                "node": "6"
-            },
-            "end": {
-                "type": "camp",
-                "region": "8",
-                "node": "7"
-            }
+        "end": {
+          "type": "camp",
+          "region": "4",
+          "node": "5"
         },
-        "13" : {
-            "start": {
-                "type": "camp",
-                "region": "8",
-                "node": "7"
-            },
-            "end": {
-                "type": "camp",
-                "region": "8",
-                "node": "8"
-            }
+        "supplyCapOffset": {
+          "x": -10,
+          "y": 20
+        }
+      },
+      "10": {
+        "start": {
+          "type": "gen",
+          "region": "2",
+          "node": "2"
         },
-        "14" : {
-            "start": {
-                "type": "camp",
-                "region": "8",
-                "node": "8"
-            },
-            "end": {
-                "type": "gen",
-                "region": "3",
-                "node": "6"
-            },
-            "supplyCapOffset": {
-                "x": 0,
-                "y": -10
-            }
+        "end": {
+          "type": "camp",
+          "region": "4",
+          "node": "5"
         },
-        "15" : {
-            "start": {
-                "type": "camp",
-                "region": "8",
-                "node": "8"
-            },
-            "end": {
-                "type": "camp",
-                "region": "8",
-                "node": "9"
-            }
+        "cp1": {
+          "x": 100,
+          "y": -40
         },
-        "16" : {
-            "start": {
-                "type": "camp",
-                "region": "8",
-                "node": "9"
-            },
-            "end": {
-                "type": "camp",
-                "region": "7",
-                "node": "10"
-            }
+        "cp2": {
+          "x": 0,
+          "y": -50
+        }
+      },
+      "11": {
+        "start": {
+          "type": "camp",
+          "region": "4",
+          "node": "5"
         },
-        "17" : {
-            "start": {
-                "type": "camp",
-                "region": "7",
-                "node": "10"
-            },
-            "end": {
-                "type": "gen",
-                "region": "3",
-                "node": "6"
-            }
+        "end": {
+          "type": "camp",
+          "region": "11",
+          "node": "6"
+        }
+      },
+      "12": {
+        "start": {
+          "type": "camp",
+          "region": "11",
+          "node": "6"
         },
-        "18" : {
-            "start": {
-                "type": "gen",
-                "region": "3",
-                "node": "6"
-            },
-            "end": {
-                "type": "camp",
-                "region": "4",
-                "node": "5"
-            }
+        "end": {
+          "type": "camp",
+          "region": "8",
+          "node": "7"
+        }
+      },
+      "13": {
+        "start": {
+          "type": "camp",
+          "region": "8",
+          "node": "7"
         },
-        "19" : {
-            "start": {
-                "type": "camp",
-                "region": "7",
-                "node": "10"
-            },
-            "end": {
-                "type": "gen",
-                "region": "1",
-                "node": "4"
-            }
+        "end": {
+          "type": "camp",
+          "region": "8",
+          "node": "8"
+        }
+      },
+      "14": {
+        "start": {
+          "type": "camp",
+          "region": "8",
+          "node": "8"
         },
-        "20" : {
-            "start": {
-                "type": "gen",
-                "region": "1",
-                "node": "4"
-            },
-            "end": {
-                "type": "gen",
-                "region": "3",
-                "node": "5"
-            }
+        "end": {
+          "type": "gen",
+          "region": "3",
+          "node": "6"
         },
-        "21" : {
-            "start": {
-                "type": "gen",
-                "region": "3",
-                "node": "5"
-            },
-            "end": {
-                "type": "gen",
-                "region": "3",
-                "node": "6"
-            }
-        }       
+        "supplyCapOffset": {
+          "x": 0,
+          "y": -10
+        }
+      },
+      "15": {
+        "start": {
+          "type": "camp",
+          "region": "8",
+          "node": "8"
+        },
+        "end": {
+          "type": "camp",
+          "region": "8",
+          "node": "9"
+        }
+      },
+      "16": {
+        "start": {
+          "type": "camp",
+          "region": "8",
+          "node": "9"
+        },
+        "end": {
+          "type": "camp",
+          "region": "7",
+          "node": "10"
+        }
+      },
+      "17": {
+        "start": {
+          "type": "camp",
+          "region": "7",
+          "node": "10"
+        },
+        "end": {
+          "type": "gen",
+          "region": "3",
+          "node": "6"
+        }
+      },
+      "18": {
+        "start": {
+          "type": "gen",
+          "region": "3",
+          "node": "6"
+        },
+        "end": {
+          "type": "camp",
+          "region": "4",
+          "node": "5"
+        }
+      },
+      "19": {
+        "start": {
+          "type": "camp",
+          "region": "7",
+          "node": "10"
+        },
+        "end": {
+          "type": "gen",
+          "region": "1",
+          "node": "4"
+        }
+      },
+      "20": {
+        "start": {
+          "type": "gen",
+          "region": "1",
+          "node": "4"
+        },
+        "end": {
+          "type": "gen",
+          "region": "3",
+          "node": "5"
+        }
+      },
+      "21": {
+        "start": {
+          "type": "gen",
+          "region": "3",
+          "node": "5"
+        },
+        "end": {
+          "type": "gen",
+          "region": "3",
+          "node": "6"
+        }
+      }
     }
-}
+  }

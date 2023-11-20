@@ -6,6 +6,8 @@ import Head from "next/head";
 import useSWR from "swr";
 import io from "socket.io-client";
 import { getCampCapacity } from "../lib/utility";
+import { drawTimer } from "@/lib/drawingUtility";
+
 let socket;
 
 async function fetcher(url) {
@@ -41,44 +43,52 @@ export default function Main(props) {
   const [selectedGenName, setSelectedGenName] = useState(null);
   const [selectedGenStats, setSelectedGenStats] = useState(null);
   const selectedGenStatsRef = useRef(null);
+  
   const [activeTab, setActiveTab] = useState("camps");
-
-  const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
-  const [isActive, setIsActive] = useState(false);
+  
+  const [timerInputSeconds, setTimerInputSeconds] = useState(0);
+  const [timerInputMinutes, setTimerInputMinutes] = useState(0);
+  
+  const [timerSecondsRemaining, setTimerSecondsRemaining] = useState(0);
+  const [timerIsActive, setTimerIsActive] = useState(false);
 
   const canvasRef = useRef(null);
-  const defaultSize = 720;
+  const defaultSize = { x: 900, y:720 };
+  // device pixel ration, for screens with scaling on
+  var dpr = 1;
 
   // DEBUGGING ///////////
   var drawCampNum = false,
     drawGenNum = false,
     drawPathNum = false;
   ///////////////////////
-  const genRadius = 9;
-  const campSize = 26; // size of blue square
-  const campDangerSize = 35; // size of red box around the blue square
+  const genRadius = 12;
+  const campSize = 37; // size of blue square
+  const campDangerSize = 39; // size of red box around the blue square
   const [imgLoaded, setImgLoaded] = useState(false);
   const imagesRef = useRef(null);
 
+
+  
   // constants for stats box drawing
   const statsInset = 1;
   const statsIconSize = 20;
   const statsYSpacing = 3;
   const statsMargin = { x: 4, y: 4 };
+  // constants for gens (red circles)
+  const genColor = "#C02F1D";//"#FF0000";
   // constants for camp stats box drawing
   const campStatsHeight =
     statsIconSize * 5 + statsMargin.y * 2 + statsYSpacing * 4;
-  const campStatsWidth = statsIconSize + 35;
+  const campStatsWidth = statsIconSize + 40;
   const campStatsBGColor = "#ebebfc"; //'#d9daff';
   // constants for gen stats box drawing
-  const genStatsWidth = statsIconSize + 45;
-  const genStatsTopHeight = 17;
-  const genStatsBottomHeight =
+  const genStatsWidth = statsIconSize + 40;
+  const genStatsHeight =
     statsIconSize * 3 + statsMargin.y * 2 + statsYSpacing * 2;
-  const genStatsHeight = genStatsTopHeight + genStatsBottomHeight;
 
   const genStatsBGColor = "#ffe8ef"; // "#efefef";'
+  const contentFont = "16px serif";
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   // Function to toggle the panel's open/close state
@@ -105,7 +115,7 @@ export default function Main(props) {
     };
     const textPos = {
       x: position.x + statsMargin.x + statsIconSize + 5,
-      y: position.y + statsMargin.y + statsIconSize / 2 + 4,
+      y: position.y + statsMargin.y + statsIconSize / 2 + 5,
     };
 
     ctx.fillStyle = "black";
@@ -141,7 +151,7 @@ export default function Main(props) {
     }
 
     // drawing stats text
-    ctx.font = "12px serif";
+    ctx.font = contentFont;
     ctx.fillStyle = "black";
     const statsArray = [
       stats.refugeesPresent,
@@ -156,86 +166,164 @@ export default function Main(props) {
     });
   }
 
-  function drawGenStats(ctx, position, stats) {
-    // draw upper box
-    ctx.fillStyle = "black";
-    ctx.fillRect(position.x, position.y, genStatsWidth, genStatsTopHeight);
-    ctx.fillStyle = genStatsBGColor;
-    ctx.fillRect(
-      position.x + statsInset,
-      position.y + statsInset,
-      genStatsWidth - statsInset * 2,
-      genStatsTopHeight - statsInset * 2
-    );
-
-    ctx.font = "11px serif";
-    ctx.fillStyle = "black";
-    const refugeesText = stats.totalRefugees + " (+" + stats.newRefugees + ")";
-    const refugeesTextPos = {
-      x:
-        position.x +
-        genStatsWidth / 2 -
-        ctx.measureText(refugeesText).width / 2,
-      y: position.y + 12,
+  function drawAllGenStats(ctx, mapData, genStats) {
+    const position = {
+      x: 15,
+      y: 30
     };
 
-    ctx.fillText(refugeesText, refugeesTextPos.x, refugeesTextPos.y);
+    const boxXOffset = 34;
 
-    const bottomBoxPos = {
-      x: position.x,
-      y: position.y + genStatsTopHeight - statsInset,
-    };
+    ctx.font = "22px serif";
+    ctx.fillStyle = "white";
+    ctx.fillText("Generation Stats: ", position.x, position.y);
+
+    position.y += 25;
+
     const imagePos = {
-      x: bottomBoxPos.x + statsMargin.x,
-      y: bottomBoxPos.y + statsMargin.y,
+      x: position.x + statsMargin.x + boxXOffset,
+      y: position.y + statsMargin.y,
     };
     const textPos = {
-      x: bottomBoxPos.x + statsMargin.x + statsIconSize + 5,
-      y: bottomBoxPos.y + statsMargin.y + statsIconSize / 2 + 4,
+      x: position.x + statsMargin.x + statsIconSize + boxXOffset + 5,
+      y: position.y + statsMargin.y + statsIconSize / 2 + 5,
     };
-    ctx.fillStyle = "black";
-    ctx.fillRect(
-      bottomBoxPos.x,
-      bottomBoxPos.y,
-      genStatsWidth,
-      genStatsBottomHeight
-    );
-    ctx.fillStyle = genStatsBGColor;
-    ctx.fillRect(
-      bottomBoxPos.x + statsInset,
-      bottomBoxPos.y + statsInset,
-      genStatsWidth - statsInset * 2,
-      genStatsBottomHeight - statsInset * 2
-    );
 
-    // drawing icons
     if (imagesRef.current != null) {
-      const imgArray = [
+      var imgArray = [
         imagesRef.current.food,
         imagesRef.current.health,
         imagesRef.current.admin,
       ];
-      imgArray.forEach((img) => {
-        ctx.drawImage(
-          img,
-          imagePos.x,
-          imagePos.y,
-          statsIconSize,
-          statsIconSize
-        );
-        imagePos.y += statsIconSize + statsYSpacing;
-      });
     }
+    
+    Object.entries(mapData['regions']).map(([regionName, regionData]) => {
+      if ('gens' in regionData) {
+        ctx.font = "16px serif";
+        ctx.fillStyle = "white";
+        ctx.fillText("Region " + regionName, position.x, position.y);
+        position.y += 10;
+        textPos.y += 10;
+        imagePos.y += 10;
+        Object.entries(regionData['gens']).map(([genName, genData]) => {
+          // draw the icon to the left of the box
+          drawGenIcon(ctx, {x: position.x + genRadius, y: (position.y + (genStatsHeight/2)) },
+                            genStats[genName].genType, genData.letter);
 
-    // drawing stats text
-    ctx.font = "12px serif";
-    ctx.fillStyle = "black";
-    const statsArray = [stats.food, stats.healthcare, stats.admin];
-    statsArray.forEach((stat) => {
-      ctx.fillText(stat, textPos.x, textPos.y);
-      textPos.y += statsIconSize + statsYSpacing;
+          const statsArray = [
+            genStats[genName].food,
+            genStats[genName].healthcare,
+            genStats[genName].admin,
+          ];
+          
+          ctx.fillStyle = "black";
+          ctx.fillRect(position.x + boxXOffset, position.y, genStatsWidth, genStatsHeight);
+          //ctx.fillStyle = "#efefef";
+          ctx.fillStyle = campStatsBGColor;
+          ctx.fillRect(
+            position.x + statsInset + boxXOffset,
+            position.y + statsInset,
+            genStatsWidth - statsInset * 2,
+            genStatsHeight - statsInset * 2
+          );
+
+          // drawing icons
+          if (imgArray) {
+            imgArray.forEach((img) => {
+              ctx.drawImage(
+                img,
+                imagePos.x,
+                imagePos.y,
+                statsIconSize,
+                statsIconSize
+              );
+              imagePos.y += statsIconSize + statsYSpacing;
+            });
+          }
+          // drawing stats text
+          ctx.font = contentFont;
+          ctx.fillStyle = "black";
+          
+          statsArray.forEach((stat) => {
+            ctx.fillText(stat, textPos.x, textPos.y);
+            textPos.y += statsIconSize + statsYSpacing;
+          });
+          //ctx.fillText("Gen " + genData.letter, position.x, position.y);
+          position.y += genStatsHeight + 15;
+          imagePos.y = position.y + statsMargin.y;
+          textPos.y = position.y + statsMargin.y + statsIconSize / 2 + 5;
+        });
+        position.y += 10;
+        imagePos.y = position.y + statsMargin.y,
+        textPos.y = position.y + statsMargin.y + statsIconSize / 2 + 5;
+      }
     });
   }
+
+
+  function drawGenIcon(ctx, position, genType, letter) {
+    // multiplied by circle size to get outer circle size
+    const outerCircleRatio = 1.35;
+
+    // outer outline box
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(
+      position.x,
+      position.y,
+      genRadius * outerCircleRatio + 1,
+      0,
+      2 * Math.PI
+    );
+    ctx.fill();
+
+    switch (genType) {
+      case "ORDERLY":
+        ctx.fillStyle = "green";
+        break;
+      case "DISORDERLY":
+        ctx.fillStyle = "yellow";
+        break;
+      case "PANIC":
+        ctx.fillStyle = 'RED';//"#9C0000";
+        break;
+      default:
+        ctx.fillStyle = "green";
+    }
+
+    // draw outer circle (color indicating generation type)
+    ctx.beginPath();
+    ctx.arc(
+      position.x,
+      position.y,
+      genRadius * outerCircleRatio,
+      0,
+      2 * Math.PI
+    );
+    ctx.fill();
+
+    // inner outline box
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(position.x, position.y, genRadius + 1, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // draw inner red circle
+    ctx.beginPath();
+    ctx.arc(position.x, position.y, genRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = genColor;
+    ctx.fill();
+    ctx.fillStyle = "white";
+    ctx.font = contentFont;
+    const textWidth = ctx.measureText(letter).width;
+    ctx.fillText(
+      letter,
+      position.x - textWidth / 2,
+      position.y + 5
+    );
+  }
+
+  
 
   function draw(ctx, campStats, genStats, routeStats) {
     // are the stats and map json loaded yet?
@@ -243,9 +331,16 @@ export default function Main(props) {
       return;
     }
 
-    const width = ctx.canvas.width;
-    const height = ctx.canvas.height;
-    ctx.font = "12px serif";
+    // draw the timer
+    if (timerIsActive) {
+      drawTimer(ctx, { x: 480, y: 75 }, timerSecondsRemaining);
+    }
+
+    drawAllGenStats(ctx, data, genStats);
+
+    ctx.font = contentFont;
+    // ctx.fillStyle = 'blue';
+    // ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     // Drawing paths (do this first so nodes are rendered on top)
     ctx.lineWidth = 5;
@@ -320,22 +415,10 @@ export default function Main(props) {
         ctx.stroke(); // Render the path
       }
 
-      // draw the supply cap number
-      if (isOpen && "supplyCapOffset" in data["paths"][path]) {
-        ctx.fillStyle = "blue";
-        const supOffset = data["paths"][path].supplyCapOffset;
-        // add drawing offset from the start of the path
-        ctx.fillText(
-          routeStats[path].supplyCap.toString() + " sup",
-          (startCoord.x + endCoord.x) / 2 + supOffset.x,
-          (startCoord.y + endCoord.y) / 2 + supOffset.y
-        );
-      }
-
       // for debugging
       if (drawPathNum) {
         ctx.fillStyle = "black";
-        ctx.font = "12px serif";
+        ctx.font = contentFont;
         ctx.fillText(
           i + 1,
           (startCoord.x + endCoord.x) / 2,
@@ -394,19 +477,19 @@ export default function Main(props) {
 
           // if (drawCampNum) {
           //   ctx.fillStyle = 'white';
-          //   ctx.font = "12px serif";
+          //   ctx.font = contentFont;
           //   ctx.fillText(camp, campNode.x-3, campNode.y+4);
           //   ctx.fillStyle = '#0000CC';
           // }
           // draw capacity on the camp
 
           ctx.fillStyle = "white";
-          ctx.font = "12px serif";
+          ctx.font = contentFont;
           const textWidth = ctx.measureText(campCapacity).width;
           ctx.fillText(
             campCapacity,
             campNode.x - textWidth / 2,
-            campNode.y + 4
+            campNode.y + 6
           );
           ctx.fillStyle = "#0000CC";
         });
@@ -414,7 +497,6 @@ export default function Main(props) {
 
       // Drawing generation points (red circles)
       if ("gens" in region) {
-        const circleColor = "#FF0000";
         Object.keys(region["gens"]).map((gen_point) => {
           const genNode = region["gens"][gen_point];
 
@@ -423,87 +505,20 @@ export default function Main(props) {
           var stats = genStats[gen_point];
           const statsPostion = genNode.statsPos;
 
-          // draw a line connecting the gen point and stats box
-          ctx.beginPath();
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 1;
-          ctx.moveTo(genNode.x, genNode.y);
-          ctx.lineTo(statsPostion.x + 35, statsPostion.y + 45);
-          ctx.stroke();
+          drawGenIcon(ctx, {x: genNode.x, y: genNode.y},  stats.genType, genNode.letter);
 
-          // multiplied by circle size to get outer circle size
-          const outerCircleRatio = 1.4;
-
-          // outer outline box
-          ctx.fillStyle = "black";
-          ctx.beginPath();
-          ctx.arc(
-            genNode.x,
-            genNode.y,
-            genRadius * outerCircleRatio + 1,
-            0,
-            2 * Math.PI
-          );
-          ctx.fill();
-
-          switch (stats.genType) {
-            case "ORDERLY":
-              ctx.fillStyle = "green";
-              break;
-            case "DISORDERLY":
-              ctx.fillStyle = "yellow";
-              break;
-            case "PANIC":
-              ctx.fillStyle = "#9C0000";
-              break;
-            default:
-              ctx.fillStyle = "green";
-          }
-
-          // draw outer circle (color indicating generation type)
-          ctx.beginPath();
-          ctx.arc(
-            genNode.x,
-            genNode.y,
-            genRadius * outerCircleRatio,
-            0,
-            2 * Math.PI
-          );
-          ctx.fill();
-
-          // inner outline box
-          ctx.fillStyle = "black";
-          ctx.beginPath();
-          ctx.arc(genNode.x, genNode.y, genRadius + 1, 0, 2 * Math.PI);
-          ctx.fill();
-
-          // draw inner red circle
-          ctx.beginPath();
-          ctx.arc(genNode.x, genNode.y, genRadius, 0, 2 * Math.PI);
-          ctx.fillStyle = circleColor;
-          ctx.fill();
-          ctx.fillStyle = "white";
-          ctx.font = "12px serif";
-          const textWidth = ctx.measureText(genNode.letter).width;
-          ctx.fillText(
-            genNode.letter,
-            genNode.x - textWidth / 2,
-            genNode.y + 4
-          );
-          ctx.fillStyle = circleColor;
-
-          drawGenStats(ctx, statsPostion, stats);
+          //drawGenStats(ctx, statsPostion, stats);
 
           if (drawGenNum) {
             ctx.fillStyle = "Black";
             ctx.fillText(gen_point, genNode.x + 15, genNode.y + 15);
-            ctx.fillStyle = circleColor;
+            ctx.fillStyle = genColor;
           }
         });
       }
       // draw region label
       if ("labelPos" in region) {
-        ctx.font = "16px serif";
+        ctx.font = "18px serif";
         ctx.fillStyle = "green";
         ctx.fillText(regionNum, region["labelPos"].x, region["labelPos"].y);
         ctx.fillStyle = "#0000CC";
@@ -532,29 +547,58 @@ export default function Main(props) {
     const ctx = canvas.getContext("2d");
 
     window.addEventListener("resize", resizeCanvas, false);
-    function resizeCanvas() {
-      const pixelRatio = 1; // window.devicePixelRatio || 1;
-      var size = defaultSize;
-      // handle resizing if panel is open
-      if (isPanelOpen && window.innerWidth - 300 < window.innerHeight) {
-        size = window.innerWidth - 300;
-        canvas.width = size;
-        canvas.height = size;
-      } else {
-        if (window.innerWidth < window.innerHeight) {
-          size = window.innerWidth;
-          canvas.width = size;
-          canvas.height = size;
-        } else {
-          size = window.innerHeight;
-          canvas.width = size;
-          canvas.height = size;
-        }
-      }
-      ctx.scale(size / defaultSize, size / defaultSize);
-      draw(ctx, campStats, genStats, routeStats);
+
+  function resizeCanvas() {
+    dpr = window.devicePixelRatio || 1;
+
+    const width = isPanelOpen ? (window.innerWidth - 300) : window.innerWidth;
+    const height = window.innerHeight;
+    const aspectRatio = defaultSize.x / defaultSize.y;
+
+    let canvasWidth = width;
+    let canvasHeight = height;
+
+    // calculate canvas dimensions based on constraints
+    if (width / aspectRatio > height) {
+      canvasWidth = height * aspectRatio;
+    } else {
+      canvasHeight = width / aspectRatio;
     }
-    
+
+    // adjust canvas dimensions for devicePixelRatio
+    canvas.width = canvasWidth * dpr;
+    canvas.height = canvasHeight * dpr;
+
+    // scale by device pixel ratio
+    ctx.scale(dpr, dpr);
+
+    // apply inverse scaling to canvas CSS
+    canvas.style.width = canvasWidth + 'px';
+    canvas.style.height = canvasHeight + 'px';
+
+    // update context scale relative to the default size
+    ctx.scale(canvasWidth / defaultSize.x, canvasHeight / defaultSize.y);
+
+  // Redraw content
+  draw(ctx, campStats, genStats, routeStats);
+}
+
+
+
+const handleToggle = () => {
+  if (!isActive) {
+    // Start the timer with the user-specified time
+    // For simplicity, let's assume the user input is in seconds
+    const totalSeconds = minutes * 60 + seconds;
+    setMinutes(Math.floor(totalSeconds / 60));
+    setSeconds(totalSeconds % 60);
+  }
+
+  setIsActive(!isActive);
+};
+
+
+
     // list of all the images we need to load
     var sources = {
       refugee: "/refugee.png",
@@ -571,40 +615,25 @@ export default function Main(props) {
     });
 
     resizeCanvas();
-  }, [data, campStats]);
-
+  });
+  // for drawing the timer
   useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
     let interval;
-    if (isActive) {
+    if (timerIsActive) {
       interval = setInterval(() => {
-        if (minutes === 0 && seconds === 0) {
+        if (timerSecondsRemaining < 0) {
+          setTimerIsActive(false);
           clearInterval(interval);
-          setIsActive(false);
         } else {
-          if (seconds === 0) {
-            setMinutes((prevMinutes) => prevMinutes - 1);
-            setSeconds(59);
-          } else {
-            setSeconds((prevSeconds) => prevSeconds - 1);
-          }
+          setTimerSecondsRemaining((prevSeconds) => prevSeconds - 1);
         }
       }, 1000);
     }
 
     return () => clearInterval(interval);
-  }, [isActive, minutes, seconds]);
-
-  const handleToggle = () => {
-    if (!isActive) {
-      // Start the timer with the user-specified time
-      // For simplicity, let's assume the user input is in seconds
-      const totalSeconds = minutes * 60 + seconds;
-      setMinutes(Math.floor(totalSeconds / 60));
-      setSeconds(totalSeconds % 60);
-    }
-
-    setIsActive(!isActive);
-  };
+  }, [timerIsActive, timerSecondsRemaining]);
 
   // effect for initializing socket. empty dependancy array to make it run only once
   useEffect(() => {
@@ -659,6 +688,12 @@ export default function Main(props) {
       socket.on("campsStatsUpdated", (updatedData) => {
         console.log("Camp stats updated:", updatedData);
       });
+
+      socket.on("startTimer", (seconds) => {
+        console.log("timer started for " + seconds + " seconds");
+        setTimerSecondsRemaining(seconds);
+        setTimerIsActive(true);
+      });
     };
 
     socketInitializer();
@@ -668,9 +703,69 @@ export default function Main(props) {
     };
   }, []);
 
+  const sendCampUpdate = () => {
+    const updateData = {
+      refugeesPresent: selectedCampStats.refugeesPresent,
+      food: selectedCampStats.food,
+      healthcare: selectedCampStats.healthcare,
+      housing: selectedCampStats.housing,
+      admin: selectedCampStats.admin,
+    };
+
+    socket.emit("updateCampStats", selectedCampStats, selectedRegionName);
+    console.log("Update was sent");
+    console.log(updateData);
+  };
+
+  const sendGenUpdate = () => {
+    const updateData = {
+      food: selectedGenStats.food,
+      healthcare: selectedGenStats.healthcare,
+      admin: selectedGenStats.admin,
+      genType:selectedGenStats.genType,
+      totalRefugees:selectedGenStats.totalRefugees,
+      newRefugees:selectedGenStats.newRefugees,
+    };
+
+    socket.emit("updateGenStats", selectedGenStats, selectedGenName);
+    console.log("Update was sent");
+    console.log(updateData);
+  };
+
+  
+
+  const sendPathUpdate = () => {
+
+  }
+
+  const startTimer = () => {
+    const timeInSeconds = timerInputMinutes * 60 + timerInputSeconds;
+    socket.emit("startTimer", timeInSeconds);
+  }
+
   // Separate effect for drawing based on changes in 'data'
   useEffect(() => {
     if (data) {
+      // var dataCopy = data;
+      // const shiftAmt = defaultSize.x - 720;
+      // Object.keys(dataCopy["regions"]).map((regionName) => {
+      //   dataCopy["regions"][regionName]['labelPos'].x += shiftAmt;
+      //   if ('camps' in dataCopy["regions"][regionName]) {
+      //     dataCopy["regions"][regionName]['campsStatsPos'].x += shiftAmt;
+      //     Object.keys(dataCopy["regions"][regionName]['camps']).map((campName) => {
+      //       dataCopy["regions"][regionName]['camps'][campName].x += shiftAmt;
+      //     });
+      //   }
+      //   if ('gens' in dataCopy["regions"][regionName]) {
+      //     Object.keys(dataCopy["regions"][regionName]['gens']).map((genName) => {
+      //       dataCopy["regions"][regionName]['gens'][genName].x += shiftAmt;
+      //       dataCopy["regions"][regionName]['gens'][genName]['statsPos'].x += shiftAmt;
+      //     });
+      //   }
+      // });
+      // console.log(JSON.stringify(dataCopy));
+      
+
       // Store the data object in the ref
       dataRef.current = data;
       //selectedCampStatsRef.current = campStats;
@@ -688,9 +783,10 @@ export default function Main(props) {
             return;
           }
           // get click position relative to scale of canvas
-          const scale = defaultSize / canvas.height;
-          const canvasX = Math.floor(event.offsetX * scale);
-          const canvasY = Math.floor(event.offsetY * scale);
+          const scale = {x: defaultSize.x / canvas.width * dpr,
+                         y: defaultSize.y / canvas.height * dpr};
+          const canvasX = Math.floor(event.offsetX * scale.x);
+          const canvasY = Math.floor(event.offsetY * scale.y);
           var clickLoc = { x: canvasX, y: canvasY };
           const data = dataRef.current;
           //handleInput(clickLoc, data, scale)
@@ -764,45 +860,12 @@ export default function Main(props) {
       );
       draw(ctx, campStats, genStats, routeStats);
     }
-  }, [data, campStats,genStats,routeStats]);
-
-  const sendCampUpdate = () => {
-    const updateData = {
-      refugeesPresent: selectedCampStats.refugeesPresent,
-      food: selectedCampStats.food,
-      healthcare: selectedCampStats.healthcare,
-      housing: selectedCampStats.housing,
-      admin: selectedCampStats.admin,
-    };
-
-    socket.emit("updateCampStats", selectedCampStats, selectedRegionName);
-    console.log("Update was sent");
-    console.log(updateData);
-  };
-
-  const sendGenUpdate = () => {
-    const updateData = {
-      food: selectedGenStats.food,
-      healthcare: selectedGenStats.healthcare,
-      admin: selectedGenStats.admin,
-      genType:selectedGenStats.genType,
-      totalRefugees:selectedGenStats.totalRefugees,
-      newRefugees:selectedGenStats.newRefugees,
-    };
-
-    socket.emit("updateGenStats", selectedGenStats, selectedGenName);
-    console.log("Update was sent");
-    console.log(updateData);
-  };
+  }, [data, campStats, genStats, routeStats, timerIsActive, timerSecondsRemaining]);
 
   
 
-  const sendPathUpdate = () => {
-
-  }
-
   return (
-    <div>
+    <div className="mainDiv">
       
       <div className={`canvas-container ${isPanelOpen ? "sidebar" : ""}`}>
         {/* Add a background image as a CSS background */}
@@ -811,8 +874,8 @@ export default function Main(props) {
         <canvas
           data-testid="canvas"
           ref={canvasRef}
-          width={defaultSize}
-          height={defaultSize}
+          width={defaultSize.x}
+          height={defaultSize.y}
         />
       </div>
 
@@ -834,7 +897,7 @@ export default function Main(props) {
             }`}
             onClick={() => setActiveTab("refugeeGeneration")}
           >
-            Refugee Generation
+            Generation
           </button>
           <button
             className={`tab-button ${activeTab === "paths" ? "active" : ""}`}
@@ -842,9 +905,13 @@ export default function Main(props) {
           >
             Paths
           </button>
-          
+          <button
+            className={`tab-button ${activeTab === "timer" ? "active" : ""}`}
+            onClick={() => setActiveTab("timer")}
+          >
+            Timer
+          </button>
         </div>
-        
         <div
           style={{
             display: "flex",
@@ -852,7 +919,6 @@ export default function Main(props) {
             alignItems: "flex-start",
           }}
         >
-          
           {/* Content for "Camps" tab */}
           {activeTab === "camps" && (
             <div>
@@ -947,53 +1013,16 @@ export default function Main(props) {
                 </div>
               )}
               <br />
-
+              <br />
               <button className="borderedd-button-update" onClick={sendCampUpdate}>
                 Update
               </button>
               <button className="borderedd-button-revert" onClick={()=> setSelectedCampStats(campStats[selectedRegionName])} >
                 Revert
               </button>
-              <button className="borderedd-button-timer" onClick={handleToggle}>
-                Start Timer</button>
-              {isActive && (
-                <div>
-                  <p><center>
-                  Time Remaining: {String(minutes).padStart(2, '0')}:
-                  {String(seconds).padStart(2, '0')}
-                  </center></p>
-                </div>
-              )}
-              {isActive || (
-                <div>
-                <label>
-                 Minutes:
-                <input
-                type="number"
-                value={minutes}
-                onChange={(e) => setMinutes(parseInt(e.target.value, 10))}
-                />
-                </label>
-                <label>
-                Seconds:
-                <input
-                type="number"
-                value={seconds}
-                onChange={(e) => setSeconds(parseInt(e.target.value, 10))}
-              />
-              </label>
             </div>
-            )}    
-          </div>
-        )}
+          )}
 
-<div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-          }}
-        >
           {/* Content for "Refugee Gen" tab */}
           {activeTab === "refugeeGeneration" && (
             <div>
@@ -1031,7 +1060,7 @@ export default function Main(props) {
                   }}
                 />
                 <br />
-                <br />  
+                <br />
                 <label htmlFor="fname">New Refugees: </label>
                 <input
                   type="number"
@@ -1101,6 +1130,7 @@ export default function Main(props) {
                   <option value="ORDERLY">ORDERLY</option>
                   <option value="DISORDERLY">DISORDERLY</option>
                   <option value="PANIC">PANIC</option>
+                  
                 </select>
                 
               <br />
@@ -1116,7 +1146,7 @@ export default function Main(props) {
             </div>
           )}
 
-          {/* Content for "Paths" tab */}
+          {/* Content for "Refugee Gen" tab */}
           {activeTab === "paths" && (
             <div>
               <div>
@@ -1130,6 +1160,32 @@ export default function Main(props) {
             </div>
           )}
 
+          {/* Content for "Refugee Gen" tab */}
+          {activeTab === "timer" && (
+            <div>
+              <div>
+                <label>
+                  Minutes:
+                  <input
+                  type="number"
+                  value={timerInputMinutes}
+                  onChange={(e) => setTimerInputMinutes(parseInt(e.target.value, 10))}
+                  />
+                </label>
+                <label>
+                  Seconds:
+                  <input
+                  type="number"
+                  value={timerInputSeconds}
+                  onChange={(e) => setTimerInputSeconds(parseInt(e.target.value, 10))}
+                />
+                </label>
+                <button className="borderedd-button-timer" onClick={startTimer}>
+                Start Timer</button>
+              </div>
+            </div>
+          )}
+
           <button
             className="bordered-button-togglepanel"
             onClick={togglePanel}
@@ -1138,7 +1194,6 @@ export default function Main(props) {
             Toggle Panel
           </button>
         </div>
-      </div>
       </div>
       )}
     </div>
