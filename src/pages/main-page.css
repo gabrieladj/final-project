@@ -11,6 +11,7 @@
   margin-right: 300px; /* Width of the side panel */
 }
 
+  
 canvas {
   display: block;
 }
@@ -24,6 +25,8 @@ canvas {
   height: 100%;
   z-index: -1; /* Place the background behind the canvas */
 }
+
+
 
   .side-panel {
     position: fixed;
@@ -52,6 +55,7 @@ canvas {
     width: 170px;
     border-radius: 20px;
   }
+  
   
   /* Button styling */
   .side-panel button {
@@ -84,8 +88,8 @@ canvas {
     background-color: rgb(251, 78, 78);
     border-radius: 20px;
     margin-left: 15px;
+    
   }
-  
   .side-panel .borderedd-button-revert:hover{
     background-color:rgb(218, 67, 67) ;
   }
@@ -106,6 +110,7 @@ canvas {
     transform: scale(1.001); /* Scale effect on hover */
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.3); /* Increased box shadow on hover */
   }
+  
 
 .side-panel.open {
   right: 0;
@@ -152,3 +157,5 @@ div input {
   box-sizing: border-box;
   margin-bottom: 5px; 
 }
+
+

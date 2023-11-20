@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 import { prisma } from "../../server/db/client";
 import { getAllCampStats, getAllRoutes, getAllGens } from "../../lib/stats";
+import { Console } from "console";
 
 const SocketHandler = (req, res) => {
   if (res.socket.server.io) {
@@ -83,6 +84,12 @@ const SocketHandler = (req, res) => {
         const gens = await getAllGens();
         socket.broadcast.emit('gens', gens);
         socket.emit('gens', gens);
+      });
+
+      socket.on("startTimer", (seconds) => {
+        console.log("Starting timer for " + seconds + " seconds")
+        socket.broadcast.emit('startTimer', seconds);
+        socket.emit('startTimer', seconds);
       });
     });
   }
