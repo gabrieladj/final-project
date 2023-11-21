@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 //import Main from '../src/pages/index';
 import Test from '../src/app/test/page';
 import '@testing-library/jest-dom';
 import { getCampStats } from '@/lib/stats';
 import { getCampCapacity } from '@/lib/utility';
+import Main from '../src/pages/index';
 
  
 describe('Home', () => {
@@ -48,5 +49,17 @@ describe('getCampCapacity', () => {
   it('should the capacity based on ratio defined in the function', async () => {
     const capacity = getCampCapacity(10, 10, 10, 10);
     expect(capacity).toBe(10);
+  });
+});
+
+describe('Main component', () => {
+  it('renders the canvas element', () => {
+    render(<Main />);
+
+    // Use getByTestId to find the canvas element by its data-testid attribute
+    const canvasElement = screen.getByTestId('canvasRef');
+
+    // Check if the canvas element is in the document
+    expect(canvasElement).toBeInTheDocument();
   });
 });
