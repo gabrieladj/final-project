@@ -50,6 +50,7 @@ export default function Main(props) {
   const [timerInputMinutes, setTimerInputMinutes] = useState(0);
   
   const [timerMillisRemaining, setTimerMillisRemaining] = useState(0);
+  const [timerStopTime, setTimerStopTime] = useState(0);
   const [timerIsActive, setTimerIsActive] = useState(false);
 
   const setTimerValue = (minutes, seconds) => {
@@ -628,16 +629,20 @@ const handleToggle = () => {
     let interval;
     if (timerIsActive) {
       interval = setInterval(() => {
-        setTimerMillisRemaining((prevSeconds) => prevSeconds - 1000);
-        if (setTimerMillisRemaining <= 0) {
+        const time = new Date().getTime();
+        const timeRemaining = timerStopTime - time;
+        setTimerMillisRemaining(timeRemaining);
+        if (timeRemaining <= 0) {
+          setTimerMillisRemaining(0);
           setTimerIsActive(false);
+          setTimerStopTime(0);
           clearInterval(interval);
         }
       }, 1000);
     }
 
     return () => clearInterval(interval);
-  }, [timerIsActive, timerMillisRemaining]);
+  }, [timerIsActive]);
 
   // effect for initializing socket. empty dependancy array to make it run only once
   useEffect(() => {
@@ -700,6 +705,7 @@ const handleToggle = () => {
         if (timeRemaining > 0) {
           console.log("start timer")
           console.log("timer started for " + timeRemaining + " milliseconds");
+          setTimerStopTime(timerStopTime);
           setTimerMillisRemaining(timeRemaining);
           setTimerIsActive(true);
         }
