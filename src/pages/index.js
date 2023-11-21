@@ -51,6 +51,15 @@ export default function Main(props) {
   
   const [timerSecondsRemaining, setTimerSecondsRemaining] = useState(0);
   const [timerIsActive, setTimerIsActive] = useState(false);
+  const [timerMillisRemaining] = useState(0);
+
+  const setTimerValue = (minutes, seconds) => {
+    setTimerInputMinutes(minutes);
+    setTimerInputSeconds(seconds);
+    //when shortcut button is clicked, start the timer immediately
+    //this is a little buggy though, usually button must be double clicked
+    //startTimer(); 
+  };
 
   const canvasRef = useRef(null);
   const defaultSize = { x: 900, y:720 };
@@ -332,7 +341,7 @@ export default function Main(props) {
     }
 
     // draw the timer
-    if (timerIsActive) {
+    if (timerIsActive && timerMillisRemaining >= 0) {
       drawTimer(ctx, { x: 480, y: 75 }, timerSecondsRemaining);
     }
 
@@ -583,8 +592,6 @@ export default function Main(props) {
   draw(ctx, campStats, genStats, routeStats);
 }
 
-
-
 const handleToggle = () => {
   if (!isActive) {
     // Start the timer with the user-specified time
@@ -623,11 +630,10 @@ const handleToggle = () => {
     let interval;
     if (timerIsActive) {
       interval = setInterval(() => {
-        if (timerSecondsRemaining < 0) {
+        setTimerSecondsRemaining((prevSeconds) => prevSeconds - 1);
+        if (timerSecondsRemaining <= 0) {
           setTimerIsActive(false);
           clearInterval(interval);
-        } else {
-          setTimerSecondsRemaining((prevSeconds) => prevSeconds - 1);
         }
       }, 1000);
     }
@@ -1160,32 +1166,47 @@ const handleToggle = () => {
             </div>
           )}
 
-          {/* Content for "Refugee Gen" tab */}
+          {/* Content for "Timer" tab */}
           {activeTab === "timer" && (
             <div>
               <div>
                 <label>
                   Minutes:
                   <input
-                  type="number"
-                  value={timerInputMinutes}
-                  onChange={(e) => setTimerInputMinutes(parseInt(e.target.value, 10))}
+                    type="number"
+                    value={timerInputMinutes}
+                    onChange={(e) => setTimerInputMinutes(parseInt(e.target.value, 10))}
+                    style={{ width: '110px', marginLeft: '2px' }}
                   />
                 </label>
-                <label>
+                <label style={{ marginLeft: '20px' }}>
                   Seconds:
                   <input
-                  type="number"
-                  value={timerInputSeconds}
-                  onChange={(e) => setTimerInputSeconds(parseInt(e.target.value, 10))}
-                />
+                    type="number"
+                    value={timerInputSeconds}
+                    onChange={(e) => setTimerInputSeconds(parseInt(e.target.value, 10))}
+                    style={{ width: '130px' }}
+                  />
                 </label>
+                <br></br>
+                <br></br>
                 <button className="borderedd-button-timer" onClick={startTimer}>
-                Start Timer</button>
+                  Start Timer
+                </button>
+                
+                {/* Buttons for specific times */}
+        <button className="borderedd-button-timer" onClick={() => setTimerValue(1, 0)}>
+          1 Minute
+        </button>
+        <button className="borderedd-button-timer" onClick={() => setTimerValue(3, 0)}>
+          3 Minutes
+        </button>
+        <button className="borderedd-button-timer" onClick={() => setTimerValue(5, 0)}>
+          5 Minutes
+        </button>
               </div>
             </div>
           )}
-
           <button
             className="bordered-button-togglepanel"
             onClick={togglePanel}
