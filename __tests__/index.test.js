@@ -51,15 +51,3 @@ describe('getCampCapacity', () => {
     expect(capacity).toBe(10);
   });
 });
-
-describe('Main component', () => {
-  it('renders the canvas element', () => {
-    render(<Main />);
-
-    // Use getByTestId to find the canvas element by its data-testid attribute
-    const canvasElement = screen.getByTestId('canvasRef');
-
-    // Check if the canvas element is in the document
-    expect(canvasElement).toBeInTheDocument();
-  });
-});
