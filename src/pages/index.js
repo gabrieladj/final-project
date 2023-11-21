@@ -49,9 +49,8 @@ export default function Main(props) {
   const [timerInputSeconds, setTimerInputSeconds] = useState(0);
   const [timerInputMinutes, setTimerInputMinutes] = useState(0);
   
-  const [timerSecondsRemaining, setTimerSecondsRemaining] = useState(0);
+  const [timerMillisRemaining, setTimerMillisRemaining] = useState(0);
   const [timerIsActive, setTimerIsActive] = useState(false);
-  const [timerMillisRemaining] = useState(0);
 
   const setTimerValue = (minutes, seconds) => {
     setTimerInputMinutes(minutes);
@@ -340,9 +339,8 @@ export default function Main(props) {
       return;
     }
 
-    // draw the timer
     if (timerIsActive && timerMillisRemaining >= 0) {
-      drawTimer(ctx, { x: 480, y: 75 }, timerSecondsRemaining);
+      drawTimer(ctx, { x: 480, y: 75 }, timerMillisRemaining);
     }
 
     drawAllGenStats(ctx, data, genStats);
@@ -630,8 +628,8 @@ const handleToggle = () => {
     let interval;
     if (timerIsActive) {
       interval = setInterval(() => {
-        setTimerSecondsRemaining((prevSeconds) => prevSeconds - 1);
-        if (timerSecondsRemaining <= 0) {
+        setTimerMillisRemaining((prevSeconds) => prevSeconds - 1000);
+        if (setTimerMillisRemaining <= 0) {
           setTimerIsActive(false);
           clearInterval(interval);
         }
@@ -639,7 +637,7 @@ const handleToggle = () => {
     }
 
     return () => clearInterval(interval);
-  }, [timerIsActive, timerSecondsRemaining]);
+  }, [timerIsActive, timerMillisRemaining]);
 
   // effect for initializing socket. empty dependancy array to make it run only once
   useEffect(() => {
@@ -695,10 +693,16 @@ const handleToggle = () => {
         console.log("Camp stats updated:", updatedData);
       });
 
-      socket.on("startTimer", (seconds) => {
-        console.log("timer started for " + seconds + " seconds");
-        setTimerSecondsRemaining(seconds);
-        setTimerIsActive(true);
+      socket.on("startTimer", (timerStopTime) => {
+        
+        const currentTime = new Date().getTime();
+        const timeRemaining = timerStopTime - currentTime;
+        if (timeRemaining > 0) {
+          console.log("start timer")
+          console.log("timer started for " + timeRemaining + " milliseconds");
+          setTimerMillisRemaining(timeRemaining);
+          setTimerIsActive(true);
+        }
       });
     };
 
@@ -866,7 +870,7 @@ const handleToggle = () => {
       );
       draw(ctx, campStats, genStats, routeStats);
     }
-  }, [data, campStats, genStats, routeStats, timerIsActive, timerSecondsRemaining]);
+  }, [data, campStats, genStats, routeStats, timerIsActive, timerMillisRemaining]);
 
   
 
