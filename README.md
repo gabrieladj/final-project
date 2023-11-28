@@ -1,65 +1,168 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Install instruction
 
-## Getting Started
+Required packages:
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+**Create deb repo for Node.js 18
+```
+NODE_MAJOR=18
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-
-## Deploying on Clean Debain 12 VPS
-
-First, install Node.js and npm:
+**Install Required Packages**
 ```
 sudo apt update
-sudo apt install -y nodejs npm
+sudo apt install nodejs npm nginx ufw git -y
 ```
-Then, clone the repository.
+
+**Create user**
+```
+sudo adduser final-project
+```
+
+**Give final-project user specific sudo permisions **
+```
+sudo echo 'final-project ALL=(root) NOPASSWD: /usr/bin/systemctl' >> /etc/sudoers
+```
+
+**Remove nginx default site config**
+
+```
+sudo rm  /etc/nginx/sites-available/default
+
+```
+
+**Edit nginx site config**
+
+
+
+```
+
+sudo nano /etc/nginx/sites-available/podi1056
+
+Paste the following:
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name _;
+        
+    location / {
+         proxy_pass http://localhost:3000;
+    }
+}
+
+Press control + x and then y to save
+
+
+ln -s /etc/nginx/sites-available/podi1056 /etc/nginx/sites-enabled 
+rm /etc/nginx/sites-enabled/default
+
+systemctl start nginx
+systemctl enable nginx
+```
+
+**Allow port 80 in firewall**
+```
+systemctl start ufw
+systemctl enable ufw
+ufw allow 80/tcp
+```
+
+**Login as final-project on the server**
+```
+su final-project
+cd ~
+```
+
+**Create a copy of the repository **
+
+Create a new repository on github using your personal github.com account
+Name it "humanitarianism-game"
+
+**Clone the app repo into local directory**
 ```
 git clone https://github.com/ajh1043/humanitarianism-game.git
-cd humanitarianism-game
 ```
-Install the project dependencies.
+
+**Generate a personal access token on github**
+
+Profile -> Developer Settings -> Tokens (classic)
+
+**Set remote-url to your new repository**
 ```
-npm install
-#or
-yarn install
-#or
-pnpm install
+git remote set-url origin https://USERNAME:ACCESS_TOKEN@github.com/USERNAME/humanitarianism-game.git
 ```
-Build the app.
+
+
+
+**Push Changes**
 ```
-npm run build
+git push
 ```
-Start the production server.
+
+Download the files from https://github.com/ajh1043/humanitarianism-game.git
+
+Push changes
+
+**Set up github actions for automatic deployment **
+
+Go to YOUR Github repository -> Actions -> Runners
+
+Click on New runner, then New self-hosted runner
+
+Choose linux as the runner image
+
+**Copy the commands from github into the server for adding the runner**
+
+This includes the "download" and "configure" portions, but not "Using your self-hosted runner"
+
+**Clone the repository**
 ```
-npm start
+cd /home/final-project/
+git clone YOUR_GITHUB_URL
+```
+
+**Switch back to root**
+```
+su -
+cd /home/final-project/action-runner
+```
+
+**Setup the runner as a service**
+```
+./svc.sh install final-project
+./svc.sh start
+```
+
+** Setup final-project as a service **
+```
+nano /etc/systemd/system/final-project.service
+```
+
+Enter the following:
+
+```[Unit]
+Description=Humanitarianism App
+
+[Service]
+Type=simple
+User=final-project
+Group=final-project
+Restart=on-failure
+Environment=LANG=en_US.UTF-8
+
+#WorkingDirectory=/home/final-project/actions-runner/_work/humanitarianism-game/humanitarianism-game
+WorkingDirectory=/home/final-project/humanitarianism-game
+ExecStart=npm start -- --port 3000
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Enable and start service**
+
+```
+systemctl enable final-project
+systemctl start final-project
 ```
