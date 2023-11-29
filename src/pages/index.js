@@ -50,6 +50,8 @@ export default function Main(props) {
   const [timerInputMinutes, setTimerInputMinutes] = useState(0);
   
   const [timerMillisRemaining, setTimerMillisRemaining] = useState(0);
+
+  const [timerStopTime, setTimerStopTime] = useState(0);
   const [timerIsActive, setTimerIsActive] = useState(false);
 
   const setTimerValue = (minutes, seconds) => {
@@ -340,7 +342,8 @@ export default function Main(props) {
     }
 
     if (timerIsActive && timerMillisRemaining >= 0) {
-      drawTimer(ctx, { x: 480, y: 75 }, timerSecondsRemaining);
+      drawTimer(ctx, { x: 480, y: 75 }, timerMillisRemaining);
+    }
 
     drawAllGenStats(ctx, data, genStats);
 
@@ -627,9 +630,13 @@ const handleToggle = () => {
     let interval;
     if (timerIsActive) {
       interval = setInterval(() => {
-        setTimerSecondsRemaining((prevSeconds) => prevSeconds - 1);
-        if (timerSecondsRemaining <= 0) {
+        const time = new Date().getTime();
+        const timeRemaining = timerStopTime - time;
+        setTimerMillisRemaining(timeRemaining);
+        if (timeRemaining <= 0) {
+          setTimerMillisRemaining(0);
           setTimerIsActive(false);
+          setTimerStopTime(0);
           clearInterval(interval);
         }
       }, 1000);
@@ -693,10 +700,14 @@ const handleToggle = () => {
       });
 
       socket.on("startTimer", (timerStopTime) => {
+
+        
         const currentTime = new Date().getTime();
         const timeRemaining = timerStopTime - currentTime;
         if (timeRemaining > 0) {
+          console.log("start timer")
           console.log("timer started for " + timeRemaining + " milliseconds");
+          setTimerStopTime(timerStopTime);
           setTimerMillisRemaining(timeRemaining);
           setTimerIsActive(true);
         }
