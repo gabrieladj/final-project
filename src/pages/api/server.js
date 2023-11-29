@@ -109,8 +109,8 @@ const SocketHandler = (req, res) => {
         timerStartTime = now.getTime();
         timerStopTime = timerStartTime + seconds*1000;
         timerRunning = true;
-        socket.emit('startTimer', timerStopTime);
         socket.broadcast.emit('startTimer', timerStopTime);
+        socket.emit('startTimer', timerStopTime);
       });
     });
   }

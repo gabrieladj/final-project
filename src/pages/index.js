@@ -50,6 +50,7 @@ export default function Main(props) {
   const [timerInputMinutes, setTimerInputMinutes] = useState(0);
   
   const [timerMillisRemaining, setTimerMillisRemaining] = useState(0);
+
   const [timerStopTime, setTimerStopTime] = useState(0);
   const [timerIsActive, setTimerIsActive] = useState(false);
 
@@ -642,7 +643,7 @@ const handleToggle = () => {
     }
 
     return () => clearInterval(interval);
-  }, [timerIsActive]);
+  }, [timerIsActive, timerMillisRemaining]);
 
   // effect for initializing socket. empty dependancy array to make it run only once
   useEffect(() => {
@@ -699,6 +700,7 @@ const handleToggle = () => {
       });
 
       socket.on("startTimer", (timerStopTime) => {
+
         
         const currentTime = new Date().getTime();
         const timeRemaining = timerStopTime - currentTime;
