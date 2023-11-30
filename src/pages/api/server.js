@@ -2,6 +2,8 @@ const { Server } = require("socket.io");
 import { prisma } from "../../server/db/client";
 import { getAllCampStats, getAllRoutes, getAllGens } from "../../lib/stats";
 import { Console } from "console";
+import { off } from "process";
+import path from "path";
 
 const SocketHandler = (req, res) => {
   if (res.socket.server.io) {
@@ -32,13 +34,16 @@ const SocketHandler = (req, res) => {
       const routes = await getAllRoutes();
       const gens = await getAllGens();
       // send initial stats to client who connected
-      socket.emit("camp_stats", campStats);
-      socket.emit("routes", routes);
-      socket.emit("gens", gens);
+      socket.emit("camp_stats", campStats, false);
+      socket.emit("routes", routes, false);
+      socket.emit("gens", gens, false);
 
       if (timerRunning) {
-        if (new Date().getTime() < timerStopTime) 
-          socket.emit('startTimer', timerStopTime);
+        const now = new Date().getTime();
+        if (now < timerStopTime) {
+          //socket.emit('startTimer', timerStopTime);
+          socket.emit('syncClock', now);
+        }
         else {
           timerRunning = false;
         }
@@ -76,9 +81,30 @@ const SocketHandler = (req, res) => {
         });
         // Broadcast the updated data to all connected clients
         const campStats = await getAllCampStats();
-        socket.broadcast.emit('camp_stats', campStats);
-        socket.emit('camp_stats', campStats);
+        socket.broadcast.emit('camp_stats', campStats, true);
+        socket.emit('camp_stats', campStats, true);
       });
+
+      socket.on("updatePathStats", async (data, pathName) => {
+        console.log("receieved path update");
+        console.log("data: ");
+        console.log(data);
+        //const{selectedRegion, food, housing, healthcare,} = data
+        await prisma.Route.update({
+          where: {
+            id: parseInt(pathName),
+          },
+          data: {
+            isOpen: data.isOpen
+          },
+        });
+        // Broadcast the updated data to all connected clients
+        const routes = await getAllRoutes();
+        socket.emit("routes", routes, true);
+        socket.broadcast.emit("routes", routes, true);
+      });
+
+      
 
       socket.on("updateGenStats", async (data, genName) => {
         console.log("receieved gen update");
@@ -100,8 +126,14 @@ const SocketHandler = (req, res) => {
         });
         // Broadcast the updated data to all connected clients
         const gens = await getAllGens();
-        socket.broadcast.emit('gens', gens);
-        socket.emit('gens', gens);
+        socket.broadcast.emit('gens', gens, true);
+        socket.emit('gens', gens, true);
+      });
+
+      socket.on("syncClock", (clientTime, offset) => {
+        const now = new Date().getTime;
+        const avgOffset = ((now - clientTime) + offset)/2;
+        socket.emit('startTimer', avgOffset, timerStopTime);
       });
 
       socket.on("startTimer", (seconds) => {
@@ -109,9 +141,17 @@ const SocketHandler = (req, res) => {
         timerStartTime = now.getTime();
         timerStopTime = timerStartTime + seconds*1000;
         timerRunning = true;
-        socket.broadcast.emit('startTimer', timerStopTime);
-        socket.emit('startTimer', timerStopTime);
+        socket.emit('syncClock', now);
+        socket.broadcast.emit('syncClock', now);
       });
+
+      socket.on("stopTimer", () => {
+        timerRunning = false;
+        socket.emit('stopTimer');
+        socket.broadcast.emit('stopTimer');
+      });
+
+      
     });
   }
   res.end();
