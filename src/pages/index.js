@@ -43,6 +43,10 @@ export default function Main(props) {
   const [selectedGenName, setSelectedGenName] = useState(null);
   const [selectedGenStats, setSelectedGenStats] = useState(null);
   const selectedGenStatsRef = useRef(null);
+
+  const [selectedRouteName, setSelectedRouteName] = useState(null);
+  const [selectedRouteStats, setSelectedRouteStats] = useState(null);
+  const selectedRouteStatsRef = useRef(null);
   
   const [activeTab, setActiveTab] = useState("camps");
   
@@ -52,6 +56,7 @@ export default function Main(props) {
   const [timerMillisRemaining, setTimerMillisRemaining] = useState(0);
 
   const [timerStopTime, setTimerStopTime] = useState(0);
+  const [timerTimeOffset, setTimerTimeOffset] = useState(0);
   const [timerIsActive, setTimerIsActive] = useState(false);
 
   const setTimerValue = (minutes, seconds) => {
@@ -424,8 +429,7 @@ export default function Main(props) {
         ctx.stroke(); // Render the path
       }
 
-      // for debugging
-      if (drawPathNum) {
+      if (drawPathNum || (activeTab === "paths" &&  isPanelOpen)) {
         ctx.fillStyle = "black";
         ctx.font = contentFont;
         ctx.fillText(
@@ -484,6 +488,7 @@ export default function Main(props) {
             campSize - bevelOffset * 2
           );
 
+
           // if (drawCampNum) {
           //   ctx.fillStyle = 'white';
           //   ctx.font = contentFont;
@@ -512,9 +517,37 @@ export default function Main(props) {
           // get stats for this region from campStats
           // camp stats should have data from the database about each region
           var stats = genStats[gen_point];
-          const statsPostion = genNode.statsPos;
 
           drawGenIcon(ctx, {x: genNode.x, y: genNode.y},  stats.genType, genNode.letter);
+
+
+          // draw number of refugees above and below the gen icon
+          var refugees = stats.totalRefugees.toString();
+          var newRefugees = " (+" + stats.newRefugees.toString() + ")";
+          var refugeeText = refugees + newRefugees;
+          
+          ctx.font = "16px serif";
+          var textWidth = ctx.measureText(refugeeText).width;
+          // black outline
+          ctx.fillStyle = "black";  
+          ctx.fillRect(
+            genNode.x - textWidth/2 - 8,
+            genNode.y - 41,
+            textWidth + 16,
+            22,
+          );
+
+          ctx.fillStyle = campStatsBGColor;  
+          ctx.fillRect(
+            genNode.x - textWidth/2 - 7,
+            genNode.y - 40,
+            textWidth + 14,
+            20,
+          );
+          ctx.fillStyle = "black";
+          ctx.fillText(refugeeText, genNode.x - textWidth / 2, genNode.y-25);
+          //ctx.fillText(refugees, genNode.x - ctx.measureText(refugees).width / 2, genNode.y-30);
+          //ctx.fillText(newRefugees, genNode.x - ctx.measureText(newRefugees).width / 2, genNode.y+30);
 
           //drawGenStats(ctx, statsPostion, stats);
 
@@ -631,7 +664,7 @@ const handleToggle = () => {
     if (timerIsActive) {
       interval = setInterval(() => {
         const time = new Date().getTime();
-        const timeRemaining = timerStopTime - time;
+        const timeRemaining = timerStopTime - time - timerTimeOffset;
         setTimerMillisRemaining(timeRemaining);
         if (timeRemaining <= 0) {
           setTimerMillisRemaining(0);
@@ -655,54 +688,55 @@ const handleToggle = () => {
         console.log("connected");
       });
 
-      socket.on("camp_stats", (stats) => {
+      socket.on("camp_stats", (stats, isUpdate) => {
         console.log("Received camp stats on client: ");
         console.log(stats);
         setCampStats(stats);
-        //if (selectedCampStats == null) {
+        // if this is not an update (intial loading), select selected index to 0
+        if (!isUpdate) {
           setSelectedCampStats(Object.values(stats)[0]);
           setselectedRegionName(Object.keys(stats)[0]);
-        //}
-        //else {
-          //setSelectedCampStats(selectedCampStats[selectedRegionName]);
-        //}
+        }
       });
 
-      socket.on("routes", (routes) => {
+      socket.on("routes", (routes, isUpdate) => {
         console.log("Received routes on client: ");
         console.log(routes);
         setRouteStats(routes);
+        if (!isUpdate) {
+          setSelectedRouteStats(Object.values(routes)[0]);
+          setSelectedRouteName(Object.keys(routes)[0]);
+        }
       });
-      socket.on("gens", (gens) => {
+      socket.on("gens", (gens, isUpdate) => {
         console.log("Received gen points on client: ");
         console.log(gens);
         setGenStats(gens);
-        //if (selectedGenStats == null) {
+        // if this is not an update (intial loading), select selected index to 0
+        if (!isUpdate) {
           setSelectedGenStats(Object.values(gens)[0]);
           setSelectedGenName(Object.keys(gens)[0]);
-        //}
-        //else {
-          //setSelectedGenStats(selectedGenStats[selectedGenName]);
-          //console.log("called")
-        //}
+        }
       });
 
-      // socket.on("campResult", (result) => {
-      //   console.log("Received camp:");
-      //   console.log(result);
-      //   setIndCampStats(result);
-
-      //   // Handle the result as needed
-      // });
+      
 
       socket.on("campsStatsUpdated", (updatedData) => {
         console.log("Camp stats updated:", updatedData);
       });
 
-      socket.on("startTimer", (timerStopTime) => {
+      socket.on("syncClock", (serverTime) => {
+        console.log("syncing time");
+        const clientTime = new Date().getTime();
+        const offset = serverTime - clientTime;
+        socket.emit("syncClock", clientTime, offset);
+      });
 
-        
-        const currentTime = new Date().getTime();
+      socket.on("startTimer", (timeOffset, timerStopTime) => {
+        setTimerIsActive(false);
+        console.log("Starting timer");
+        setTimerTimeOffset(timeOffset);
+        const currentTime = new Date().getTime() - timeOffset;
         const timeRemaining = timerStopTime - currentTime;
         if (timeRemaining > 0) {
           console.log("start timer")
@@ -711,6 +745,11 @@ const handleToggle = () => {
           setTimerMillisRemaining(timeRemaining);
           setTimerIsActive(true);
         }
+      });
+
+      socket.on("stopTimer", () => {
+        console.log("Stopping timer");
+        setTimerIsActive(false);
       });
     };
 
@@ -753,12 +792,22 @@ const handleToggle = () => {
   
 
   const sendPathUpdate = () => {
+    const updateData = {
+      isOpen: selectedRouteStats.isOpen
+    };
 
+    socket.emit("updatePathStats", selectedRouteStats, selectedRouteName);
+    console.log("Update was sent");
+    console.log(updateData);
   }
 
   const startTimer = () => {
     const timeInSeconds = timerInputMinutes * 60 + timerInputSeconds;
     socket.emit("startTimer", timeInSeconds);
+  }
+
+  const stopTimer = () => {
+    socket.emit("stopTimer");
   }
 
   // Separate effect for drawing based on changes in 'data'
@@ -1145,9 +1194,9 @@ const handleToggle = () => {
                     }));
                   }}
                 >
-                  <option value="ORDERLY">ORDERLY</option>
-                  <option value="DISORDERLY">DISORDERLY</option>
-                  <option value="PANIC">PANIC</option>
+                  <option value="ORDERLY">Orderly</option>
+                  <option value="DISORDERLY">Disorderly</option>
+                  <option value="PANIC">Panic</option>
                   
                 </select>
                 
@@ -1165,16 +1214,48 @@ const handleToggle = () => {
           )}
 
           {/* Content for "Refugee Gen" tab */}
-          {activeTab === "paths" && (
+          {activeTab === "paths" &&(
             <div>
+              {routeStats && data["paths"] && 
               <div>
+                <label htmlFor="dropdown">Route</label>
+                <select
+                  id="dropdown"
+                  value={selectedRouteName}
+                  onChange={(event) => {
+                    setSelectedRouteName(event.target.value);
+                    setSelectedRouteStats(routeStats[event.target.value]);
+                  }}
+                >
+                  {Object.keys(data["paths"]).map(route => {
+                    return <option value={route}>Route {route}</option>
+                  })}
+                </select>
+                <br />
+                <br />
+                <label htmlFor="dropdown">Open</label>
+                <select
+                  id="dropdown"
+                  value={selectedRouteStats.isOpen ? 'open' : 'closed'}
+                  onChange={(event) => {
+                    setSelectedRouteStats((prevStats) => ({
+                      ...prevStats,
+                      isOpen: (event.target.value === 'open'),
+                    }));
+                  }}
+                >
+                  <option value="open">Open</option>
+                  <option value="closed">Closed</option>
+                  
+                </select>
                 <button className="borderedd-button-update" onClick={sendPathUpdate}>
                   Update
                 </button>
-                <button className="borderedd-button-revert" >
+                <button className="borderedd-button-revert" onClick={()=> setSelectedRouteStats(routeStats[selectedRouteName])} >
                   Revert
                 </button>
               </div>
+              }
             </div>
           )}
 
@@ -1202,20 +1283,35 @@ const handleToggle = () => {
                 </label>
                 <br></br>
                 <br></br>
-                <button className="borderedd-button-timer" onClick={startTimer}>
+                {!timerIsActive && 
+                <button className="borderedd-button-timer" onClick={() => startTimer()}>
                   Start Timer
                 </button>
-                
+                }
+                {timerIsActive && 
+                <button className="borderedd-button-timer-stop" onClick={() => stopTimer()}>
+                  Stop Timer
+                </button>
+                }
+                <br />
+                <br />
                 {/* Buttons for specific times */}
-        <button className="borderedd-button-timer" onClick={() => setTimerValue(1, 0)}>
-          1 Minute
-        </button>
-        <button className="borderedd-button-timer" onClick={() => setTimerValue(3, 0)}>
-          3 Minutes
-        </button>
-        <button className="borderedd-button-timer" onClick={() => setTimerValue(5, 0)}>
-          5 Minutes
-        </button>
+                {/*
+                
+                <p className="presets-label">Presets: </p>
+                <button className="borderedd-button-timer-preset" onClick={() => {setTimerInputMinutes(1); setTimerInputSeconds(0); startTimer();}}>
+                  1 Minute
+                </button>
+                <button className="borderedd-button-timer-preset" onClick={() => {setTimerInputMinutes(3); setTimerInputSeconds(0); startTimer();}}>
+                  3 Minutes
+                </button>
+                <button className="borderedd-button-timer-preset" onClick={() => {setTimerInputMinutes(5); setTimerInputSeconds(0); startTimer();}}>
+                  5 Minutes
+                </button>
+                <button className="borderedd-button-timer-preset" onClick={() => {setTimerInputMinutes(10); setTimerInputSeconds(0); startTimer();}}>
+                  10 Minutes
+                </button>
+                */}
               </div>
             </div>
           )}
