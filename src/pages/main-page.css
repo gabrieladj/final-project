@@ -28,6 +28,8 @@ canvas {
 
 
 
+
+
   .side-panel {
     position: fixed;
     top: 0;
@@ -104,33 +106,6 @@ canvas {
     background-color:#e29015;
   }
 
-  .side-panel .borderedd-button-timer-stop{
-    background-color: rgb(231, 54, 41);
-    border-radius: 20px;
-    margin-left: 15px;
-  }
-
-  .side-panel .borderedd-button-timer-stop:hover{
-    background-color:#e22d15;
-  }
-
-  .side-panel .borderedd-button-timer-preset{
-    background-color: rgb(231, 164, 41);
-    border-radius: 20px;
-    margin-left: 65px;
-    width: 170px;
-  }
-
-  .side-panel .borderedd-button-timer-preset:hover{
-    background-color:#e29015;
-  }
-
-  .presets-label {
-    text-align-last: center;
-  }
-
-  
-
   /* Hover effect for buttons */
   .side-panel button:hover {
     background-color: #cf7c00;
@@ -185,4 +160,64 @@ div input {
   margin-bottom: 5px; 
 }
 
+
+.bordered-button-admin {
+  background-color: #3498db;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+
+
+.admin-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.admin-popup h2 {
+  margin-bottom: 10px;
+}
+
+.admin-popup label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.admin-popup input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.button-logout {
+  background-color: rgb(241, 62, 62);
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.admin-popup button {
+  background-color: #3498db;
+  color: #fff;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.admin-popup button:not(:last-child) {
+  margin-right: 10px;
+}
 

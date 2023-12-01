@@ -8,6 +8,9 @@ import io from "socket.io-client";
 import { getCampCapacity } from "../lib/utility";
 import { drawTimer } from "@/lib/drawingUtility";
 
+import { useRouter } from "next/router";
+import {withSessionSsr} from "@/lib/session";
+
 let socket;
 
 async function fetcher(url) {
@@ -36,6 +39,7 @@ function loadImages(sources, callback) {
 }
 
 export default function Main(props) {
+  const router = useRouter()
   const [selectedRegionName, setselectedRegionName] = useState(null);
   const [selectedCampStats, setSelectedCampStats] = useState(null);
   const selectedCampStatsRef = useRef(null);
@@ -58,6 +62,8 @@ export default function Main(props) {
   const [timerStopTime, setTimerStopTime] = useState(0);
   const [timerTimeOffset, setTimerTimeOffset] = useState(0);
   const [timerIsActive, setTimerIsActive] = useState(false);
+
+ 
 
   const setTimerValue = (minutes, seconds) => {
     setTimerInputMinutes(minutes);
@@ -105,11 +111,86 @@ export default function Main(props) {
   const genStatsBGColor = "#ffe8ef"; // "#efefef";'
   const contentFont = "16px serif";
 
+  
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isUserLoggedIn,setUserLoggedIn] = useState(false)
+  const [username,setUsername] = useState('')
+  const [password,setPassword] = useState('')
+  const [showAdminPopup, setShowAdminPopup] = useState(false);
+  const loggedIn  = props.loggedIn;
+  const loggedUser = props.username;
+  const loggedId = props.userId;
+
+
+
   // Function to toggle the panel's open/close state
   const togglePanel = () => {
-    setIsPanelOpen(!isPanelOpen);
+    //setIsPanelOpen(!isPanelOpen);
+    // Check if admin is logged in before opening the panel
+    
+    
+    if (loggedIn) {
+      setIsPanelOpen(!isPanelOpen);
+    } else {
+      // Handle showing a message or prompt for admin login
+      // For simplicity, let's use window.alert in this example
+      window.alert("Please log in as admin first!");
+    } 
   };
+
+  const handleLogin = async () => {
+    // Replace this with your actual admin login logic
+    try {
+     const response = await axios.post('/api/login', { username, password });
+
+     
+
+     // Handle successful login (redirect, update state, etc.)
+     setUserLoggedIn(true);
+     console.log('User Found')
+     setUsername('')
+     setPassword('')
+
+     alert('Login successfull')
+     setShowAdminPopup(false)
+     //router.refresh()
+     location.reload()
+     console.log(response.data);
+   } catch (error) {
+     
+     console.error('Login failed', error.response.data.message);
+     console.log('No login')
+     // Handle login failure
+   }
+
+   
+ 
+   
+   //setShowAdminPopup(false);
+ }
+
+ const handleLogout = async (e) => {
+   e.preventDefault()
+   try {
+     const res = await axios.post('/api/logout', {});
+     console.log("Logged out")
+     if (res.data.ok) {
+       
+       //router.refresh();
+       location.reload()
+     }
+   
+   } catch (error) {
+     console.log(error);
+     if (error.response && error.response.data && error.response.data.message)
+         alert(error.response.data.message);
+     else
+         alert("Unknown error occurred");
+   }
+ }
+
+
+
   const dataRef = useRef(null);
   const { data, error } = useSWR("/map-nodes.json", fetcher);
   const [campStats, setCampStats] = useState(null);
@@ -625,6 +706,9 @@ export default function Main(props) {
   draw(ctx, campStats, genStats, routeStats);
 }
 
+
+
+
 const handleToggle = () => {
   if (!isActive) {
     // Start the timer with the user-specified time
@@ -947,7 +1031,7 @@ const handleToggle = () => {
       </div>
 
       {/* Side Panel */}
-      {campStats && genStats && routeStats &&(
+      {campStats && genStats && routeStats && props.loggedIn &&(
       <div className={`side-panel ${isPanelOpen ? "open" : ""}`}>
         {/* Panel content goes here, include drop down */}
 
@@ -1315,6 +1399,9 @@ const handleToggle = () => {
               </div>
             </div>
           )}
+          <button className="button-logout"
+          onClick={handleLogout}
+          style={{ position: "fixed", bottom : 0, left:0 }}>Logout</button>
           <button
             className="bordered-button-togglepanel"
             onClick={togglePanel}
@@ -1325,6 +1412,70 @@ const handleToggle = () => {
         </div>
       </div>
       )}
+
+{!props.loggedIn && (
+      <button
+      className="bordered-button-admin"
+      onClick={() => setShowAdminPopup(true)}
+      style={{ position: "fixed", bottom: 0, right: 0 }}
+    >
+      Admin
+    </button>
+    ) }
+
+
+
+    
+
+    {/* Admin Popup */}
+    {showAdminPopup && (
+      <div className="admin-popup">
+        <h2>Admin Login</h2>
+        <label htmlFor="admin-username">Username:</label>
+        <input
+          type="text"
+          id="admin-username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <label htmlFor="admin-password">Password:</label>
+        <input
+          type="password"
+          id="admin-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button onClick={handleLogin}>Login</button>
+        
+        <button onClick={() => setShowAdminPopup(false)}>Close</button>
+      </div>
+    )}
+
+
     </div>
   );
 }
+
+
+export const getServerSideProps = withSessionSsr(async function ({ req, res }) {
+  
+  
+  // verify login data
+  if (req.session.user) {
+    const username = req.session.user.username;
+    const userId = parseInt(req.session.user.userId);
+    
+    return {props: {
+      userId,
+      username,
+      loggedIn:true
+    }};
+  }
+  else {
+    return {props: {
+      userId:-1,
+      username:'',
+      loggedIn:false
+    }};
+  }
+});
