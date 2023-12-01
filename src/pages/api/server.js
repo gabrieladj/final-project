@@ -1,9 +1,7 @@
 const { Server } = require("socket.io");
 import { prisma } from "../../server/db/client";
 import { getAllCampStats, getAllRoutes, getAllGens } from "../../lib/stats";
-import { Console } from "console";
-import { off } from "process";
-import path from "path";
+import {getJwtSecretKey, verifyJwtToken} from "../../lib/token-auth";
 
 const SocketHandler = (req, res) => {
   if (res.socket.server.io) {
@@ -12,23 +10,36 @@ const SocketHandler = (req, res) => {
     console.log("Socket is initializing");
     const io = new Server(res.socket.server);
     res.socket.server.io = io;
+
+    // timer stuff in milliseconds
     var timerStartTime = 0;
     var timerStopTime = 0;
-
-    // if timer is started for 1 minute, will be 60*1000 (milliseconds)
-    var timerTotalTime = 0; 
     var timerRunning = false;
-
-
-    function getTimeRemaining() {
-      const now = new Date();
-      console.log(timerTotalTime + "  - " + now.getTime() + " - " + timerStartTime);
-      return timerTotalTime - (now.getTime() - timerStartTime);
-    }
-
+    
     io.on("connection", async (socket) => {
-      console.log(`User connected: ${socket.id}`);
+      if (socket.handshake.query && socket.handshake.query.token){
+        var decoded = await verifyJwtToken(socket.handshake.query.token);
+        if (decoded) {
+          console.log(`Admin connected: ${socket.id}`);
+          // Connection authenticated for this socket
+          socket.decoded = decoded;
+          nonAuthenticatedSocketHandlers(socket);
+          authenticatedSocketHandlers(socket);
+        }
+        else {
+          console.log(`Admin failed to authenticate: ${socket.id}`);
+          // Handle authentication error for authenticated users
+          socket.emit('auth_error', { message: 'Authentication error' });
+          socket.disconnect(true); // Disconnect the socket due to authentication error
+        }
+      }
+      else {
+        console.log(`User connected: ${socket.id}`);
+        nonAuthenticatedSocketHandlers(socket);
+      }      
+    });
 
+   async function nonAuthenticatedSocketHandlers(socket) {
       // client has just connected, get initial stats
       const campStats = await getAllCampStats();
       const routes = await getAllRoutes();
@@ -49,6 +60,14 @@ const SocketHandler = (req, res) => {
         }
       }
 
+      socket.on("syncClock", (clientTime, offset) => {
+        const now = new Date().getTime;
+        const avgOffset = ((now - clientTime) + offset)/2;
+        socket.emit('startTimer', avgOffset, timerStopTime);
+      });
+    }
+
+    async function authenticatedSocketHandlers(socket) {
       socket.on("updateLevelFood", async (data) => {
         try {
           const updateFood = await prisma.RefugeeCamp.update({
@@ -130,12 +149,6 @@ const SocketHandler = (req, res) => {
         socket.emit('gens', gens, true);
       });
 
-      socket.on("syncClock", (clientTime, offset) => {
-        const now = new Date().getTime;
-        const avgOffset = ((now - clientTime) + offset)/2;
-        socket.emit('startTimer', avgOffset, timerStopTime);
-      });
-
       socket.on("startTimer", (seconds) => {
         const now = new Date();
         timerStartTime = now.getTime();
@@ -150,9 +163,7 @@ const SocketHandler = (req, res) => {
         socket.emit('stopTimer');
         socket.broadcast.emit('stopTimer');
       });
-
-      
-    });
+    }
   }
   res.end();
 };

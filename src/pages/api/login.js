@@ -8,18 +8,14 @@ export default withSessionRoute(async (req, res) => {
   if (req.method === 'POST') {
     const { username, password } = req.body;
 
-    
-
     const user = await get_user(username);
-    
 
     //console.log(hashedPassword)
 
     if (user) {
-      // Set session data
-      console.log("Is user")
       const verify = await verifyPassword(password, user.password)
       if (verify) {
+        // Set session data
         req.session.user = { 
             username: user.username,
             userId: user.id

@@ -11,6 +11,9 @@ import { drawTimer } from "@/lib/drawingUtility";
 import { useRouter } from "next/router";
 import {withSessionSsr} from "@/lib/session";
 import axios from 'axios'
+// for token auth
+import { SignJWT } from "jose";
+import { getJwtSecretKey } from "@/lib/token-auth";
 
 let socket;
 
@@ -114,46 +117,29 @@ export default function Main(props) {
 
   
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [isUserLoggedIn,setUserLoggedIn] = useState(false)
   const [username,setUsername] = useState('')
   const [password,setPassword] = useState('')
   const [showAdminPopup, setShowAdminPopup] = useState(false);
   const loggedIn  = props.loggedIn;
   const loggedUser = props.username;
   const loggedId = props.userId;
-
+  const token = props.token;
 
 
   // Function to toggle the panel's open/close state
   const togglePanel = () => {
-    //setIsPanelOpen(!isPanelOpen);
-    // Check if admin is logged in before opening the panel
-    
-    
-    if (loggedIn) {
-      setIsPanelOpen(!isPanelOpen);
-    } else {
-      // Handle showing a message or prompt for admin login
-      // For simplicity, let's use window.alert in this example
-      window.alert("Please log in as admin first!");
-    } 
+    setIsPanelOpen(!isPanelOpen);
   };
 
   const handleLogin = async () => {
     // Replace this with your actual admin login logic
     try {
      const response = await axios.post('/api/login', { username, password });
-
      // Handle successful login (redirect, update state, etc.)
-     setUserLoggedIn(true);
-     console.log('User Found')
-     setUsername('')
-     setPassword('')
-
-     alert('Login successfull')
-     setShowAdminPopup(false)
+     console.log('Logged in, page reloading...');
+     setShowAdminPopup(false);
      //router.refresh()
-     location.reload()
+     location.reload();
      console.log(response.data);
    } catch (error) {
      
@@ -661,7 +647,6 @@ export default function Main(props) {
 
   // initial useEffect function, will be called on page load
   useEffect(() => {
-    console.log("use effect called");
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
@@ -698,9 +683,9 @@ export default function Main(props) {
     // update context scale relative to the default size
     ctx.scale(canvasWidth / defaultSize.x, canvasHeight / defaultSize.y);
 
-  // Redraw content
-  draw(ctx, campStats, genStats, routeStats);
-}
+    // Redraw content
+    draw(ctx, campStats, genStats, routeStats);
+  }
 
 
 
@@ -762,7 +747,19 @@ const handleToggle = () => {
   useEffect(() => {
     const socketInitializer = async () => {
       await fetch("/api/server");
-      socket = io();
+
+      // is admin loggen in?
+      if (loggedIn && token) {
+        // create a socket session with token
+        socket = io({
+          query: {
+            token: props.token
+          }
+        });
+      }
+      else {
+        socket = io();
+      }
 
       socket.on("connect", () => {
         console.log("connected");
@@ -1027,7 +1024,7 @@ const handleToggle = () => {
       </div>
 
       {/* Side Panel */}
-      {campStats && genStats && routeStats && props.loggedIn &&(
+      {campStats && genStats && routeStats && loggedIn && (
       <div className={`side-panel ${isPanelOpen ? "open" : ""}`}>
         {/* Panel content goes here, include drop down */}
 
@@ -1307,8 +1304,8 @@ const handleToggle = () => {
                     setSelectedRouteStats(routeStats[event.target.value]);
                   }}
                 >
-                  {Object.keys(data["paths"]).map(route => {
-                    return <option value={route}>Route {route}</option>
+                  {Object.keys(data["paths"]).map((route, index) => {
+                    return <option key={index} value={route}>Route {route}</option>
                   })}
                 </select>
                 <br />
@@ -1411,15 +1408,15 @@ const handleToggle = () => {
       </div>
       )}
 
-{!props.loggedIn && (
+    {!loggedIn && (
       <button
       className="bordered-button-admin"
       onClick={() => setShowAdminPopup(true)}
       style={{ position: "fixed", bottom: 0, right: 0 }}
-    >
-      Admin
-    </button>
-    ) }
+      >
+        Admin
+      </button>
+    )}
 
 
     {/* Admin Popup */}
@@ -1445,32 +1442,42 @@ const handleToggle = () => {
         <button onClick={() => setShowAdminPopup(false)}>Close</button>
       </div>
     )}
-
-
     </div>
   );
 }
 
 
 export const getServerSideProps = withSessionSsr(async function ({ req, res }) {
-  
-  
   // verify login data
   if (req.session.user) {
+    console.log("getJwtSecretKey")
+    console.log(getJwtSecretKey());
+
     const username = req.session.user.username;
     const userId = parseInt(req.session.user.userId);
+
+    const token = await new SignJWT({
+      username: username,
+      userId: userId
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("1d") 
+      .sign(getJwtSecretKey());
     
     return {props: {
       userId,
       username,
-      loggedIn:true
+      loggedIn:true,
+      token
     }};
   }
   else {
     return {props: {
       userId:-1,
       username:'',
-      loggedIn:false
+      loggedIn:false,
+      token: ''
     }};
   }
 });
