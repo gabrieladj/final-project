@@ -1453,6 +1453,9 @@ const handleToggle = () => {
 export const getServerSideProps = withSessionSsr(async function ({ req, res }) {
   // verify login data
   if (req.session.user) {
+    console.log("getJwtSecretKey")
+    console.log(getJwtSecretKey());
+
     const username = req.session.user.username;
     const userId = parseInt(req.session.user.userId);
 
