@@ -221,3 +221,27 @@ div input {
   margin-right: 10px;
 }
 
+.side-panel .borderedd-button-timer-stop{
+  background-color: rgb(231, 54, 41);
+  border-radius: 20px;
+  margin-left: 15px;
+}
+
+.side-panel .borderedd-button-timer-stop:hover{
+  background-color:#e22d15;
+}
+
+.side-panel .borderedd-button-timer-preset{
+  background-color: rgb(231, 164, 41);
+  border-radius: 20px;
+  margin-left: 65px;
+  width: 170px;
+}
+
+.side-panel .borderedd-button-timer-preset:hover{
+  background-color:#e29015;
+}
+
+.presets-label {
+  text-align-last: center;
+}
