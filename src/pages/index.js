@@ -144,8 +144,6 @@ export default function Main(props) {
     try {
      const response = await axios.post('/api/login', { username, password });
 
-     
-
      // Handle successful login (redirect, update state, etc.)
      setUserLoggedIn(true);
      console.log('User Found')
@@ -164,9 +162,6 @@ export default function Main(props) {
      // Handle login failure
    }
 
-   
- 
-   
    //setShowAdminPopup(false);
  }
 
@@ -1400,9 +1395,11 @@ const handleToggle = () => {
               </div>
             </div>
           )}
-          <button className="button-logout"
+
+          <button className="bordered-button-togglepanel"
           onClick={handleLogout}
-          style={{ position: "fixed", bottom : 0, left:0 }}>Logout</button>
+          style={{ position: "fixed", bottom : 0, left:0 }}>
+            Logout</button>
           <button
             className="bordered-button-togglepanel"
             onClick={togglePanel}
@@ -1410,7 +1407,7 @@ const handleToggle = () => {
           >
             Toggle Panel
           </button>
-        </div>
+          </div>
       </div>
       )}
 
@@ -1425,13 +1422,10 @@ const handleToggle = () => {
     ) }
 
 
-
-    
-
     {/* Admin Popup */}
     {showAdminPopup && (
       <div className="admin-popup">
-        <h2>Admin Login</h2>
+        <h2><center>Admin Login</center></h2>
         <label htmlFor="admin-username">Username:</label>
         <input
           type="text"
