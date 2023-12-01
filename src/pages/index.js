@@ -1304,8 +1304,8 @@ const handleToggle = () => {
                     setSelectedRouteStats(routeStats[event.target.value]);
                   }}
                 >
-                  {Object.keys(data["paths"]).map(route => {
-                    return <option value={route}>Route {route}</option>
+                  {Object.keys(data["paths"]).map((route, index) => {
+                    return <option key={index} value={route}>Route {route}</option>
                   })}
                 </select>
                 <br />
