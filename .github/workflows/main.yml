@@ -46,6 +46,7 @@ jobs:
       - name: Build and run
         working-directory: /home/final-project/humanitarianism-game/
         run: |
+          npm install
           npx prisma migrate deploy
           npm run build
           sudo systemctl restart final-project
