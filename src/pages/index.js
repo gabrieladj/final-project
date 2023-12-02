@@ -120,6 +120,7 @@ export default function Main(props) {
   const [username,setUsername] = useState('')
   const [password,setPassword] = useState('')
   const [showAdminPopup, setShowAdminPopup] = useState(false);
+  const [loginErrorMessage, setLoginErrorMessage] = useState('');
   const loggedIn  = props.loggedIn;
   const loggedUser = props.username;
   const loggedId = props.userId;
@@ -132,24 +133,27 @@ export default function Main(props) {
   };
 
   const handleLogin = async () => {
-    // Replace this with your actual admin login logic
     try {
      const response = await axios.post('/api/login', { username, password });
-     // Handle successful login (redirect, update state, etc.)
-     console.log('Logged in, page reloading...');
-     setShowAdminPopup(false);
-     //router.refresh()
-     location.reload();
-     console.log(response.data);
-   } catch (error) {
      
-     console.error('Login failed', error.response.data.message);
-     console.log('No login')
-     // Handle login failure
+     if (response.data.success) {
+      location.reload();
+     }
+   } catch (error) {
+     //setLoginErrorMessage("An unkown error occured");
+     if (error.response && error.response.data && error.response.data.message)
+        setLoginErrorMessage(error.response.data.message);
+      else
+        setLoginErrorMessage("Unknown error occurred");
    }
-
-   //setShowAdminPopup(false);
  }
+
+ const handleLoginClose = () => {
+  setShowAdminPopup(false);
+  setLoginErrorMessage('');
+  setUsername('');
+  setPassword('');
+ };
 
  const handleLogout = async (e) => {
    e.preventDefault()
@@ -167,7 +171,7 @@ export default function Main(props) {
      if (error.response && error.response.data && error.response.data.message)
          alert(error.response.data.message);
      else
-         alert("Unknown error occurred");
+         alert("An unknown error occurred");
    }
  }
 
@@ -650,11 +654,25 @@ export default function Main(props) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    window.addEventListener("resize", resizeCanvas, false);
+    window.addEventListener("resize", resize, false);
 
-  function resizeCanvas() {
+
+  function resize() {
+    //resize tab content in side panel
+    const sidePanel = document.querySelector('.side-panel');
+    const tabContents = document.querySelectorAll('.tab-content');
+    if (sidePanel && tabContents) {
+      const sidePanelHeight = sidePanel.clientHeight;
+      const headerHeight = document.querySelector('.side-panel-header').clientHeight + 10;
+      const tabContentHeight = sidePanelHeight - headerHeight;
+      //console.log(tabContentHeight + 'px');
+      tabContents.forEach(tabContent => {
+        tabContent.style.height = tabContentHeight + 'px';
+      });
+    }
+
+    // resize canvase
     dpr = window.devicePixelRatio || 1;
-
     const width = isPanelOpen ? (window.innerWidth - 300) : window.innerWidth;
     const height = window.innerHeight;
     const aspectRatio = defaultSize.x / defaultSize.y;
@@ -719,7 +737,7 @@ const handleToggle = () => {
       draw(ctx, campStats, genStats, routeStats);
     });
 
-    resizeCanvas();
+    resize();
   });
   // for drawing the timer
   useEffect(() => {
@@ -1064,10 +1082,8 @@ const handleToggle = () => {
           }}
         >
           {/* Content for "Camps" tab */}
-          {activeTab === "camps" && (
-            <div>
-              {campStats && (
-                <div>
+          {activeTab === "camps" && campStats && (
+                <div className="tab-content">
                   <label htmlFor="dropdown">Region</label>
                   <select
                     id="dropdown"
@@ -1154,24 +1170,20 @@ const handleToggle = () => {
                       }));
                     }}
                   />
-                </div>
-              )}
-              <br />
-              <br />
-              <button className="borderedd-button-update" onClick={sendCampUpdate}>
-                Update
-              </button>
-              <button className="borderedd-button-revert" onClick={()=> setSelectedCampStats(campStats[selectedRegionName])} >
-                Revert
-              </button>
+                  <br />
+                  <br />
+                  <button className="borderedd-button-update" onClick={sendCampUpdate}>
+                    Update
+                  </button>
+                  <button className="borderedd-button-revert" onClick={()=> setSelectedCampStats(campStats[selectedRegionName])} >
+                    Revert
+                  </button>
             </div>
           )}
 
           {/* Content for "Refugee Gen" tab */}
-          {activeTab === "refugeeGeneration" && (
-            <div>
-              { genStats && (
-                <div>
+          {activeTab === "refugeeGeneration" &&  genStats && (
+                <div className="tab-content">
               
                 <label htmlFor="dropdown">Generation point</label>
                 <select
@@ -1286,15 +1298,11 @@ const handleToggle = () => {
                 Revert
               </button>
             </div>
-              )}
-            </div>
           )}
 
           {/* Content for "Refugee Gen" tab */}
-          {activeTab === "paths" &&(
-            <div>
-              {routeStats && data["paths"] && 
-              <div>
+          {activeTab === "paths" && routeStats && data["paths"] && (
+              <div className="tab-content">
                 <label htmlFor="dropdown">Route</label>
                 <select
                   id="dropdown"
@@ -1332,14 +1340,13 @@ const handleToggle = () => {
                   Revert
                 </button>
               </div>
-              }
-            </div>
+              
           )}
 
           {/* Content for "Timer" tab */}
           {activeTab === "timer" && (
             <div>
-              <div>
+              <div className="tab-content">
                 <label>
                   Minutes:
                   <input
@@ -1423,6 +1430,9 @@ const handleToggle = () => {
     {showAdminPopup && (
       <div className="admin-popup">
         <h2><center>Admin Login</center></h2>
+        {loginErrorMessage !== "" && (
+        <h2 style={{color: "red"}}>{loginErrorMessage}</h2>
+        )}
         <label htmlFor="admin-username">Username:</label>
         <input
           type="text"
@@ -1438,8 +1448,7 @@ const handleToggle = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button onClick={handleLogin}>Login</button>
-        
-        <button onClick={() => setShowAdminPopup(false)}>Close</button>
+        <button onClick={() => handleLoginClose()}>Close</button>
       </div>
     )}
     </div>
@@ -1450,9 +1459,6 @@ const handleToggle = () => {
 export const getServerSideProps = withSessionSsr(async function ({ req, res }) {
   // verify login data
   if (req.session.user) {
-    console.log("getJwtSecretKey")
-    console.log(getJwtSecretKey());
-
     const username = req.session.user.username;
     const userId = parseInt(req.session.user.userId);
 

@@ -1,7 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-
-const prisma = new PrismaClient();
+import { prisma } from "../server/db/client";
 
 export async function list_users() {
   let users = await prisma.AdminUser.findMany();
