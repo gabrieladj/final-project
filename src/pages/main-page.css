@@ -26,10 +26,6 @@ canvas {
   z-index: -1; /* Place the background behind the canvas */
 }
 
-
-
-
-
   .side-panel {
     position: fixed;
     top: 0;
@@ -43,6 +39,7 @@ canvas {
   }
 
   label{
+    color:#000;
     font-size: large;
     font-weight: bolder;
     font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
@@ -57,7 +54,6 @@ canvas {
     width: 170px;
     border-radius: 20px;
   }
-  
   
   /* Button styling */
   .side-panel button {
@@ -160,7 +156,6 @@ div input {
   margin-bottom: 5px; 
 }
 
-
 .bordered-button-admin {
   background-color: #3498db;
   color: #fff;
@@ -170,14 +165,13 @@ div input {
   cursor: pointer;
 }
 
-
-
 .admin-popup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   padding: 20px;
+  color: #000;
   background-color: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
@@ -197,16 +191,16 @@ div input {
   padding: 8px;
   margin-bottom: 10px;
   box-sizing: border-box;
+  border: 2px solid #ccc; /* Add this line to set border */
+  border-radius: 3px; /* Add this line to set border radius */
 }
 
-.button-logout {
+/* .button-logout {
   background-color: rgb(241, 62, 62);
   color: #fff;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
+  border-radius: 20px;
   cursor: pointer;
-}
+} */
 
 .admin-popup button {
   background-color: #3498db;

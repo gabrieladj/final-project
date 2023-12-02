@@ -4,7 +4,7 @@ import Test from '../src/app/test/page';
 import '@testing-library/jest-dom';
 import { getCampStats } from '@/lib/stats';
 import { getCampCapacity } from '@/lib/utility';
-import Main from '../src/pages/index';
+//import Main from '../src/pages/index';
 
  
 describe('Home', () => {
