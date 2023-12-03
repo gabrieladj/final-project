@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    background-color: black;
+    color: white;
+    .button-card{
+        background-color: rgb(231, 164, 41);
+        color: black;
+    }
+}

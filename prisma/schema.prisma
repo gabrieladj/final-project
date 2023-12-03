@@ -17,10 +17,23 @@ model AdminUser {
   email    String @unique
 }
 
+model CourseSection {
+  id                Int    @id @default(autoincrement())
+  name              String @unique
+  description       String
+  deployableRegions DeployableRegion[]
+  refugeeGens       RefugeeGen[]
+  routes            Route[]
+}
+
 
 // Regions with blue squares
 model DeployableRegion {
   id                   Int           @id @default(autoincrement())
+  courseSection        CourseSection @relation(fields: [courseSectionId], references: [id])
+  courseSectionId      Int           @default(2)
+  // id that matches the node in map-nodes.json
+  jsonId               Int           @default(0)
   food                 Int           @default(0)
   healthcare           Int           @default(0)
   housing              Int           @default(0)
@@ -35,20 +48,28 @@ model DeployableRegion {
 // GenTypes: ORDERLY, DISORDERLY, PANIC
 // 
 model RefugeeGen { 
-  id             Int           @id @default(autoincrement()) 
-  genType        String        @default("ORDERLY")
-  totalRefugees  Int           @default(0)
-  newRefugees    Int           @default(0)
-  food           Int           @default(0)
-  healthcare     Int           @default(0)
-  admin          Int           @default(0)
+  id                   Int           @id @default(autoincrement())
+  courseSection        CourseSection @relation(fields: [courseSectionId], references: [id])
+  courseSectionId      Int           @default(2)
+  // id that matches the node in map-nodes.json
+  jsonId               Int           @default(0)
+  genType              String        @default("ORDERLY")
+  totalRefugees        Int           @default(0)
+  newRefugees          Int           @default(0)
+  food                 Int           @default(0)
+  healthcare           Int           @default(0)
+  admin                Int           @default(0)
 }
 
 
 
 // Route model (Golden Lines– Refugee/Supply Routes)
 model Route { 
-  id             Int           @id @default(autoincrement())
-  isOpen         Boolean       @default(true)
-  supplyCap      Int           @default(1)
+  id                   Int           @id @default(autoincrement())
+  courseSection        CourseSection @relation(fields: [courseSectionId], references: [id])
+  courseSectionId      Int           @default(2)
+  // id that matches the node in map-nodes.json
+  jsonId               Int           @default(0)
+  isOpen               Boolean       @default(true)
+  supplyCap            Int           @default(1)
 }
