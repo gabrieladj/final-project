@@ -1,7 +1,8 @@
 const { Server } = require("socket.io");
-import { prisma } from "../../server/db/client";
-import { getAllCampStats, getAllRoutes, getAllGens } from "../../lib/stats";
-import {getJwtSecretKey, verifyJwtToken} from "../../lib/token-auth";
+import { prisma } from "@/server/db/client";
+import { getAllCampStats, getAllRoutes, getAllGens, getGen, updateGen } from "@/lib/stats";
+import { verifyJwtToken } from "@/lib/token-auth";
+import { courseSectionExists } from "@/lib/courseSection";
 
 const SocketHandler = (req, res) => {
   if (res.socket.server.io) {
@@ -15,35 +16,51 @@ const SocketHandler = (req, res) => {
     var timerStartTime = 0;
     var timerStopTime = 0;
     var timerRunning = false;
-    
+
     io.on("connection", async (socket) => {
-      if (socket.handshake.query && socket.handshake.query.token){
-        var decoded = await verifyJwtToken(socket.handshake.query.token);
+      const query = socket.handshake.query;
+      
+      if (!query) {
+        socket.emit("load_error", { message: "No query sent" });
+        return socket.disconnect();
+      }
+      
+      if (!query.courseSectionId) {
+        socket.emit("load_error", { message: "Class number not specified" });
+        return socket.disconnect();
+      }
+
+      const courseSectionId = parseInt(query.courseSectionId);
+
+      if (!courseSectionId || !(await courseSectionExists(courseSectionId))) {
+        socket.emit("load_error", { message: "Class not found" });
+        return socket.disconnect();
+      }
+    
+      if (query.token) {
+        const decoded = await verifyJwtToken(query.token);
         if (decoded) {
           console.log(`Admin connected: ${socket.id}`);
-          // Connection authenticated for this socket
           socket.decoded = decoded;
-          nonAuthenticatedSocketHandlers(socket);
+          nonAuthenticatedSocketHandlers(socket, courseSectionId);
           authenticatedSocketHandlers(socket);
+          return;
         }
-        else {
-          console.log(`Admin failed to authenticate: ${socket.id}`);
-          // Handle authentication error for authenticated users
-          socket.emit('auth_error', { message: 'Authentication error' });
-          socket.disconnect(true); // Disconnect the socket due to authentication error
-        }
+    
+        console.log(`Admin failed to authenticate: ${socket.id}`);
+        socket.emit("auth_error", { message: "Authentication error" });
+        return socket.disconnect(true);
       }
-      else {
-        console.log(`User connected: ${socket.id}`);
-        nonAuthenticatedSocketHandlers(socket);
-      }      
+
+      console.log(`User connected: ${socket.id}`);
+      nonAuthenticatedSocketHandlers(socket, courseSectionId);
     });
 
-   async function nonAuthenticatedSocketHandlers(socket) {
+    async function nonAuthenticatedSocketHandlers(socket, courseSectionId) {
       // client has just connected, get initial stats
-      const campStats = await getAllCampStats();
-      const routes = await getAllRoutes();
-      const gens = await getAllGens();
+      const campStats = await getAllCampStats(courseSectionId);
+      const routes = await getAllRoutes(courseSectionId);
+      const gens = await getAllGens(courseSectionId);
       // send initial stats to client who connected
       socket.emit("camp_stats", campStats, false);
       socket.emit("routes", routes, false);
@@ -53,115 +70,95 @@ const SocketHandler = (req, res) => {
         const now = new Date().getTime();
         if (now < timerStopTime) {
           //socket.emit('startTimer', timerStopTime);
-          socket.emit('syncClock', now);
-        }
-        else {
+          socket.emit("syncClock", now);
+        } else {
           timerRunning = false;
         }
       }
 
       socket.on("syncClock", (clientTime, offset) => {
         const now = new Date().getTime;
-        const avgOffset = ((now - clientTime) + offset)/2;
-        socket.emit('startTimer', avgOffset, timerStopTime);
+        const avgOffset = (now - clientTime + offset) / 2;
+        socket.emit("startTimer", avgOffset, timerStopTime);
       });
     }
 
     async function authenticatedSocketHandlers(socket) {
-      socket.on("updateLevelFood", async (data) => {
-        try {
-          const updateFood = await prisma.RefugeeCamp.update({
-            where: { id: 1 },
-            data: { foodLevel: 10 },
+      socket.on("updateCampStats", async (data, region, courseSectionId) => {
+        const camp = await prisma.DeployableRegion.findFirst({
+          where: {
+              jsonId: parseInt(region),
+              courseSectionId,
+          }
+        });
+        if (camp) {
+          await prisma.DeployableRegion.update({
+            where: {
+              id: camp.id,
+            },
+            data: {
+              food: parseInt(data.food),
+              healthcare: parseInt(data.healthcare),
+              housing: parseInt(data.housing),
+              admin: parseInt(data.admin),
+              refugeesPresent: parseInt(data.refugeesPresent),
+            },
           });
-          io.emit("dataBaseUpdated", updateFood);
-          console.log("Update food was send");
-        } catch (error) {
-          console.error(error);
+          // Broadcast the updated data to all connected clients
+          const campStats = await getAllCampStats(courseSectionId);
+          socket.broadcast.emit("camp_stats", campStats, true);
+          socket.emit("camp_stats", campStats, true);
         }
       });
 
-      socket.on("updateCampStats", async (data, region) => {
-        console.log("receieved in back end");
-        console.log("data: ");
-        console.log(data);
-        //const{selectedRegion, food, housing, healthcare,} = data
-        await prisma.DeployableRegion.update({
+      socket.on("updatePathStats", async (data, pathName, courseSectionId) => {
+        const route = await prisma.Route.findFirst({
           where: {
-            id: parseInt(region),
-          },
-          data: {
-            food: parseInt(data.food),
-            healthcare: parseInt(data.healthcare),
-            housing: parseInt(data.housing),
-            admin: parseInt(data.admin),
-            refugeesPresent: parseInt(data.refugeesPresent)
-          },
+              jsonId: parseInt(pathName),
+              courseSectionId,
+          }
         });
-        // Broadcast the updated data to all connected clients
-        const campStats = await getAllCampStats();
-        socket.broadcast.emit('camp_stats', campStats, true);
-        socket.emit('camp_stats', campStats, true);
+        if (route) {
+          await prisma.Route.update({
+            where: {
+              id: route.id,
+            },
+            data: {
+              isOpen: data.isOpen,
+            },
+          });
+          // Broadcast the updated data to all connected clients
+          const routes = await getAllRoutes(courseSectionId);
+          socket.emit("routes", routes, true);
+          socket.broadcast.emit("routes", routes, true);
+        }
       });
 
-      socket.on("updatePathStats", async (data, pathName) => {
-        console.log("receieved path update");
-        console.log("data: ");
-        console.log(data);
-        //const{selectedRegion, food, housing, healthcare,} = data
-        await prisma.Route.update({
-          where: {
-            id: parseInt(pathName),
-          },
-          data: {
-            isOpen: data.isOpen
-          },
-        });
-        // Broadcast the updated data to all connected clients
-        const routes = await getAllRoutes();
-        socket.emit("routes", routes, true);
-        socket.broadcast.emit("routes", routes, true);
-      });
-
-      
-
-      socket.on("updateGenStats", async (data, genName) => {
-        console.log("receieved gen update");
-        console.log("data: ");
-        console.log(data);
-        //const{selectedRegion, food, housing, healthcare,} = data
-        await prisma.RefugeeGen.update({
-          where: {
-            id: parseInt(genName),
-          },
-          data: {
-            totalRefugees: parseInt(data.totalRefugees),
-            newRefugees: parseInt(data.newRefugees),
-            food: parseInt(data.food),
-            healthcare: parseInt(data.healthcare),
-            admin: parseInt(data.admin),
-            genType: data.genType
-          },
-        });
-        // Broadcast the updated data to all connected clients
-        const gens = await getAllGens();
-        socket.broadcast.emit('gens', gens, true);
-        socket.emit('gens', gens, true);
+      socket.on("updateGenStats", async (data, genName, courseSectionId) => {
+        //console.log(data)
+        const gen = await getGen(courseSectionId, parseInt(genName));
+        if (gen) {
+          await updateGen(data, gen.id);
+          // Broadcast the updated data to all connected clients
+          const gens = await getAllGens(courseSectionId);
+          socket.broadcast.emit("gens", gens, true);
+          socket.emit("gens", gens, true);
+        }
       });
 
       socket.on("startTimer", (seconds) => {
         const now = new Date();
         timerStartTime = now.getTime();
-        timerStopTime = timerStartTime + seconds*1000;
+        timerStopTime = timerStartTime + seconds * 1000;
         timerRunning = true;
-        socket.emit('syncClock', now);
-        socket.broadcast.emit('syncClock', now);
+        socket.emit("syncClock", now);
+        socket.broadcast.emit("syncClock", now);
       });
 
       socket.on("stopTimer", () => {
         timerRunning = false;
-        socket.emit('stopTimer');
-        socket.broadcast.emit('stopTimer');
+        socket.emit("stopTimer");
+        socket.broadcast.emit("stopTimer");
       });
     }
   }

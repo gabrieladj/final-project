@@ -1,14 +1,16 @@
 import { prisma } from "../server/db/client";
 
-export  async function getAllCampStats() {
-    const stats = await prisma.DeployableRegion.findMany();
+export  async function getAllCampStats(courseSectionId) {
+    const stats = await prisma.DeployableRegion.findMany({
+        where: {courseSectionId}
+    });
 
     // parse it into object with key being the camp id
     // that way we dont have to search for the right one on the client
     let data = {};
     if (stats) {
         for (const camp of stats) {
-            data[camp.id] = {
+            data[camp.jsonId] = {
                 food: camp.food,
                 healthcare: camp.healthcare,
                 housing: camp.housing,
@@ -20,12 +22,14 @@ export  async function getAllCampStats() {
     return data;
 }
 
-export async function getAllRoutes() {
-    const routes = await prisma.Route.findMany();
+export async function getAllRoutes(courseSectionId) {
+    const routes = await prisma.Route.findMany({
+        where: {courseSectionId}
+    });
     let data = {};
     if (routes) {
         for (const route of routes) {
-            data[route.id] = {
+            data[route.jsonId] = {
                 isOpen: route.isOpen,
                 supplyCap: route.supplyCap
             }
@@ -34,12 +38,16 @@ export async function getAllRoutes() {
     return data;
 }
 
-export async function getAllGens() {
-    const gens = await prisma.RefugeeGen.findMany();
+export async function getAllGens(courseSectionId) {
+    const gens = await prisma.RefugeeGen.findMany({
+        where: {
+            courseSectionId
+        }
+    });
     let data = {};
     if (gens) {
         for (const gen of gens) {
-            data[gen.id] = {
+            data[gen.jsonId] = {
                 genType: gen.genType,
                 totalRefugees: gen.totalRefugees,
                 newRefugees: gen.newRefugees,
@@ -50,4 +58,31 @@ export async function getAllGens() {
         }
     }
     return data;
+}
+
+
+export async function getGen(courseSectionId, jsonId) {
+    const gen = await prisma.RefugeeGen.findFirst({
+        where: {
+            jsonId: jsonId,
+            courseSectionId: courseSectionId,
+        }
+    });
+    return gen;
+}
+
+export async function updateGen(data, genId) {
+    await prisma.RefugeeGen.update({
+        where: {
+          id: genId,
+        },
+        data: {
+          totalRefugees: parseInt(data.totalRefugees),
+          newRefugees: parseInt(data.newRefugees),
+          food: parseInt(data.food),
+          healthcare: parseInt(data.healthcare),
+          admin: parseInt(data.admin),
+          genType: data.genType,
+        },
+      });
 }

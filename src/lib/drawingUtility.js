@@ -24,3 +24,16 @@ export function drawTimer(ctx, position, millisRemaining) {
     textX =  position.x + (width / 2) - (ctx.measureText(timerText).width / 2);
     ctx.fillText(timerText, textX, position.y + 75);
 }
+
+export function drawError(ctx, position, message) {
+    const header = "Error";
+    ctx.font = '36px serif';
+    const textWidth = ctx.measureText(message).width;
+    const textX =  position.x - textWidth/2;
+    ctx.fillStyle = 'black';
+    const height = 90;
+    ctx.fillRect(position.x - textWidth/2 - 10, position.y, textWidth + 20, height);
+    ctx.fillStyle = "red";
+    ctx.fillText(header, position.x-ctx.measureText(header).width/2, position.y + 35);
+    ctx.fillText(message, textX, position.y + 70);
+}

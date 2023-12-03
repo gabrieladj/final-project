@@ -40,6 +40,7 @@ canvas {
 
   .tab-content {
     overflow-y: auto;
+    overflow-x: hidden;
     width: 300px;
   }
 
@@ -55,9 +56,19 @@ canvas {
     font-weight: bolder;
   }
 
-  .side-panel .bordered-button-togglepanel{
+  .bordered-button-togglepanel{
     width: 170px;
     border-radius: 20px;
+    display: block;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    background-color: rgb(231, 164, 41);
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
   }
   
   /* Button styling */
